@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { FiSearch } from "react-icons/fi";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { FiArrowUp, FiRefreshCw, FiSearch } from "react-icons/fi";
+import { FormControl, InputLabel, Select, MenuItem, Tooltip } from "@mui/material";
 
 const Filter = () => {
     const categories = [
@@ -19,19 +19,21 @@ const Filter = () => {
     };
 
     return(
-        <div className="py-6 lg:pb-8">
-            <div className="flex lg:flex-row flex-col-reverse lg:justify-between justify-center items-center gap-4">
-                {/* SEARCH BAR                                 */}
-                <div className="relative flex items-center w-full lg:w-96">
-                    <FiSearch className="absolute left-4 text-slate-600 text-lg" />
+        <div className="py-4 lg:py-6">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center sm:justify-between w-full">
+                {/* SEARCH BAR */}
+                <div className="relative flex items-center w-full sm:w-80 md:w-96">
+                    <FiSearch className="absolute left-4 text-slate-600 text-lg pointer-events-none" />
                     <input
                         type="text"
                         placeholder="Search products..."
-                        className="w-full border border-gray-300 rounded-lg px-12 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+                        className="w-full border border-gray-300 rounded-lg px-12 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                     />
                 </div>
-                <div className="flex sm:flex-row flex-col gap-4 items-center">
-                    <FormControl variant="outlined" size="small">
+
+                {/* CATEGORY FILTER & SORT BUTTON - Right Side */}
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center flex-shrink-0">
+                    <FormControl variant="outlined" size="small" className="w-full sm:w-40">
                         <InputLabel>Category</InputLabel>
                         <Select 
                             labelId="category-select-label" 
@@ -46,7 +48,19 @@ const Filter = () => {
                                 </MenuItem>
                             ))}
                         </Select>
-                    </FormControl> 
+                    </FormControl>
+
+                    {/* SORT BUTTON */}
+                    <Tooltip title="Sort by price: ascending">
+                        <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium h-10 whitespace-nowrap">
+                            Sort By
+                            <FiArrowUp size={18}/>  
+                        </button>
+                    </Tooltip>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-rose-900 text-white rounded-lg transition-colors duration-300 ease-in shadow-md focus:outline-none">
+                        <FiRefreshCw size={16} />
+                        <span className="font-semibold">Clear Filters</span></button>
+                    
                 </div>
             </div>
         </div>

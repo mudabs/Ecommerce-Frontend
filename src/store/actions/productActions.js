@@ -1,20 +1,19 @@
 import axios from 'axios';
 
-export const fetchProductsAction = () => async (dispatch) => {
+export const fetchProductsAction = (queryString = "") => async (dispatch) => {
     try {
         dispatch({ type: "IS_FETCHING" });
         
-        const response = await axios.get(
-            `${import.meta.env.VITE_API_PUBLIC_BASE_URL}/products`,
-            {
-                withCredentials: true,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+        const url = queryString 
+            ? `${import.meta.env.VITE_API_PUBLIC_BASE_URL}/products?${queryString}`
+            : `${import.meta.env.VITE_API_PUBLIC_BASE_URL}/products`;
         
-        console.log("Products fetched successfully:", response.data);
+        const response = await axios.get(url, {
+            withCredentials: true,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
         
         // Handle different API response formats
         let productsArray = [];
@@ -36,8 +35,6 @@ export const fetchProductsAction = () => async (dispatch) => {
             };
         } else if (response.data?.products && Array.isArray(response.data.products)) {
             productsArray = response.data.products;
-        } else {
-            console.warn("Unable to find products array in response");
         }
         
         dispatch({
@@ -52,9 +49,7 @@ export const fetchProductsAction = () => async (dispatch) => {
         
         dispatch({ type: "IS_SUCCESS" });
     } catch (error) {
-        console.error("Error fetching products:", error);
         const errorMsg = error.response?.data?.message || error.message || "Failed to fetch products";
-        console.log("Dispatching IS_ERROR with message:", errorMsg);
         dispatch({
             type: "IS_ERROR",
             payload: errorMsg,

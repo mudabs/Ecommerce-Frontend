@@ -1,20 +1,19 @@
 import { FaExclamationTriangle } from "react-icons/fa";
 import ProductCard from "./ProductCard";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchProductsAction } from "../store/actions/productActions";
+import { useSelector } from "react-redux";
+import useProductFilter from "./useProductFilter";
 import Filter from "./Filter";
 
 const Products = () => {
-    const dispatch = useDispatch();
+    // Use the custom hook to handle filtering
+    useProductFilter();
+    
     const { isLoading, errorMessage } = useSelector((state) => state.errors);
-    const { products } = useSelector((state) => state.product);
+    const { filteredProducts, products } = useSelector((state) => state.product);
 
-    console.log("Products component state:", { isLoading, errorMessage, products });
+    // Use filtered products if available, otherwise use raw products
+    const displayProducts = filteredProducts || products;
 
-    useEffect(() => {
-        dispatch(fetchProductsAction());
-    }, [dispatch]);
     return(
         <div className="lg:px-14 sm:px-8 px-4 2xl:w-[90%] 2xl:mx-auto">
             {/* This checks if loading, else errorMessage else displays the products */}
@@ -30,9 +29,9 @@ const Products = () => {
                 </div>
             ) : (
                 <div className="min-h-175">
-                    {products?.length ? (
+                    {displayProducts?.length ? (
                         <div className="pb-6 pt-14 grid 2xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2 gap-y-6 gap-x-6">
-                            {products.map((item, i) => <ProductCard key={i} {...item}/>) }
+                            {displayProducts.map((item, i) => <ProductCard key={i} {...item}/>) }
                         </div>
                     ) : (
                         <div className="py-14 text-center text-gray-600">

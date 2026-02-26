@@ -3,11 +3,13 @@ import './App.css'
 import { Routes, Route } from 'react-router-dom';
 import {
   SignIn,
+  SignUp,
   SignedIn,
   SignedOut,
   RedirectToSignIn,
 } from '@clerk/clerk-react';
 import Products from './components/Products';
+import NavBar from './components/NavBar';
 
 const RequireAuth = ({ children }) => (
   <>
@@ -20,17 +22,21 @@ const RequireAuth = ({ children }) => (
 
 function App() {
   return (
-    <Routes>
-      <Route path="/sign-in/*" element={<SignIn />} />
-      <Route
-        path="/*"
-        element={
-          <RequireAuth>
-            <Products />
-          </RequireAuth>
-        }
-      />
-    </Routes>
+    <>
+      <NavBar />
+      <Routes>
+        <Route path="/sign-in/*" element={<SignIn />} />
+        <Route path="/sign-up/*" element={<SignUp />} />
+        <Route
+          path="/*"
+          element={
+            <RequireAuth>
+              <Products />
+            </RequireAuth>
+          }
+        />
+      </Routes>
+    </>
   );
 }
 

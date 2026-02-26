@@ -85,7 +85,7 @@ const AIAssistant = () => {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-white hover:scale-110 z-40"
+        className="fixed bottom-6 right-6 w-16 h-16 bg-linear-to-r from-blue-500 to-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-white hover:scale-110 z-40"
         title="AI Assistant"
       >
         {isOpen ? (
@@ -97,9 +97,9 @@ const AIAssistant = () => {
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
+        <div className="fixed bottom-24 right-6 w-96 h-96 bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
+          <div className="bg-linear-to-r from-blue-500 to-purple-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MdAutoAwesome size={24} />
               <h2 className="text-lg font-semibold">SmartCart Assistant</h2>
@@ -129,7 +129,7 @@ const AIAssistant = () => {
                       className="max-w-full h-auto rounded mb-2 max-h-40"
                     />
                   )}
-                  <p className="text-sm whitespace-pre-wrap break-words">
+                  <p className="text-sm whitespace-pre-wrap wrap-break-word">
                     {message.text}
                   </p>
                   <span

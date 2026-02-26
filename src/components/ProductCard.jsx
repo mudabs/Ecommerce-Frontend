@@ -22,11 +22,11 @@ const ProductCard = ({
     }
     return(
         <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-            <div onClick={() => {handleProductView({id: productId, productName, image, description, quantity, price, discount, specialPrice})}} className="w-full overflow-hidden aspect-5/2">
+            <div onClick={() => {handleProductView({id: productId, productName, image, description, quantity, price, discount, specialPrice})}} className="w-full h-48 overflow-hidden bg-white flex items-center justify-center">
                 <img 
                 src={image} 
                 alt={productName} 
-                className="w-full h-48 object-cover cursor-pointer transition-transform duration-300 transform hover:scale-105">
+                className="w-full h-full object-contain cursor-pointer transition-transform duration-300 transform hover:scale-105">
                 </img>
             </div>
             <div className="p-4">

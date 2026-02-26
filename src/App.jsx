@@ -1,6 +1,6 @@
 
 import './App.css'
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import {
   SignIn,
   SignUp,
@@ -41,7 +41,6 @@ function App() {
     <>
       <NavBar />
       <Routes>
-        <Route path="/" element={<Navigate to="/sign-in" replace />} />
         <Route path="/sign-in/*" element={<SignInPage />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route

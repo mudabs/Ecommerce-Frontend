@@ -6,16 +6,18 @@ import store from './store/reducers/store';
 import { Provider } from 'react-redux';
 import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
+import { ClerkProvider } from '@clerk/clerk-react';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
     <AuthProvider>
       <StrictMode>
-        <BrowserRouter>
-        <App />
-        </BrowserRouter>
+        <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ClerkProvider>
       </StrictMode>
     </AuthProvider>
   </Provider>
-  
 )

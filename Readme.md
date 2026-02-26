@@ -35,31 +35,31 @@ This project maintains two branches:
 ## Features Implemented (Sprint 1)
 
 ### Product Management
-- ✅ **Product Display** - Grid-based product listing with responsive design
-- ✅ **Product Card Component** - Reusable card component for individual products
-- ✅ **Product View Modal** - Detailed product view in modal
-- ✅ **Product Filtering** - Custom hook for filtering products by various criteria
-- ✅ **Pagination** - Navigate through product pages efficiently
+-  **Product Display** - Grid-based product listing with responsive design
+-  **Product Card Component** - Reusable card component for individual products
+-  **Product View Modal** - Detailed product view in modal
+-  **Product Filtering** - Custom hook for filtering products by various criteria
+-  **Pagination** - Navigate through product pages efficiently
 
 ### State Management
-- ✅ **Redux Store** - Centralized state management with actions and reducers
-- ✅ **Product Actions** - Actions for product-related operations
-- ✅ **Filter Actions** - Actions for filtering functionality
-- ✅ **Error Handling** - Dedicated error reducer for consistent error management
+-  **Redux Store** - Centralized state management with actions and reducers
+-  **Product Actions** - Actions for product-related operations
+-  **Filter Actions** - Actions for filtering functionality
+-  **Error Handling** - Dedicated error reducer for consistent error management
 
 ### Authentication
-- ✅ **Auth Context** - Context API for authentication state
-- ✅ **Auth Service** - Service layer for authentication operations
-- ✅ **useAuth Hook** - Custom hook for accessing auth functionality
+-  **Auth Context** - Context API for authentication state
+-  **Auth Service** - Service layer for authentication operations
+-  **useAuth Hook** - Custom hook for accessing auth functionality
 
 ### API Integration
-- ✅ **API Client** - Configured Axios instance for API calls
-- ✅ **Service Layer** - Abstracted API calls into service modules
+-  **API Client** - Configured Axios instance for API calls
+-  **Service Layer** - Abstracted API calls into service modules
 
 ### UI Components
-- ✅ **Filter Component** - Advanced filtering interface
-- ✅ **Status Component** - Display loading and error states
-- ✅ **Responsive Design** - Mobile-first responsive layouts
+-  **Filter Component** - Advanced filtering interface
+-  **Status Component** - Display loading and error states
+-  **Responsive Design** - Mobile-first responsive layouts
 
 ## Design System
 
@@ -69,7 +69,7 @@ The project uses a custom theme configuration with:
 - **Gradients**: Custom button and background gradients
 - **Shadows**: Custom shadow utilities for depth
 
-## 🛠️ Installation & Setup
+##  Installation & Setup
 
 ### Prerequisites
 - Node.js (v16 or higher)
@@ -174,7 +174,7 @@ The current `feature/products` branch focuses on delivering core product browsin
 4. **State Management** - Implement Redux for efficient state handling
 5. **Error Handling** - Graceful error states and loading indicators
 
-## 🔜 Upcoming Features
+##  Upcoming Features
 
 Future sprints will include:
 - Shopping cart functionality
@@ -185,9 +185,9 @@ Future sprints will include:
 - Wishlist functionality
 - User reviews and ratings
 
-## 👥 Development Team
+##  Development Team
 
-This project is being developed with a sprint-based agile methodology.
+This project is being developed with a sprint-based agile methodology. Contributors are Mathew Shereni and Munashe Mudabura
 
 ## License
 
@@ -196,5 +196,5 @@ This project is private and proprietary.
 ---
 
 **Current Sprint**: Sprint 1 - Product Display & Filtering
-**Current Branch**: `feature/products`
+**Current Branch**: `feature/products-next`
 **Last Updated**: February 2026

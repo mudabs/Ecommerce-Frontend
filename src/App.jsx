@@ -10,6 +10,7 @@ import {
 } from '@clerk/clerk-react';
 import Products from './components/Products';
 import NavBar from './components/NavBar';
+import AIAssistant from './components/AIAssistant';
 
 const SignInPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -40,6 +41,7 @@ function App() {
   return (
     <>
       <NavBar />
+      <AIAssistant />
       <Routes>
         <Route path="/sign-in/*" element={<SignInPage />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />

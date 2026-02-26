@@ -24,7 +24,7 @@ function ProductViewModal({open, setOpen, product, isAvailable}) {
               <img 
                 src={image} 
                 alt={productName}
-                className="w-full h-64 object-cover rounded-lg mt-4 mb-4"
+                className="w-full h-64 object-contain rounded-lg mt-4 mb-4 bg-gray-100"
               />
               
               <Description className="mt-2 text-sm/6 text-gray-600">

@@ -15,18 +15,11 @@ const Filter = () => {
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const [category, setCategory] = useState("all");
-    const [sortOrder, setSortOrder] = useState("asc");
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
-        const currentCategory = searchParams.get("category") || "all";
-        const sortOrder = searchParams.get("sortOrder") || "asc";
-        const searchTerm = searchParams.get("searchTerm") || "";
-
-        setCategory(currentCategory);
-        setSortOrder(sortOrder);
-        setSearchTerm(searchTerm);
+        const currentSearchTerm = searchParams.get("searchTerm") || "";
+        setSearchTerm(currentSearchTerm);
     }, [searchParams]);
 
     // Debounce search term to update URL with delay
@@ -44,6 +37,9 @@ const Filter = () => {
         return () => clearTimeout(delayTimer);
     }, [searchTerm, searchParams, setSearchParams]);
 
+    const category = searchParams.get("category") || "all";
+    const sortOrder = searchParams.get("sortOrder") || "asc";
+
     const handleCategoryChange = (e) => {
         const selectedCategory = e.target.value;
         const newParams = new URLSearchParams(searchParams);
@@ -53,21 +49,18 @@ const Filter = () => {
             newParams.set("category", selectedCategory);
         }
         setSearchParams(newParams);
-        setCategory(e.target.value);
     };
 
     const handleClearFilters = () => {
         setSearchParams(new URLSearchParams());
-        setCategory("all");
         setSearchTerm("");
     };
 
-    const toggleSortOrder = (e) => {
+    const toggleSortOrder = () => {
         const newOrder = (sortOrder === "asc" ? "desc" : "asc");
         const newParams = new URLSearchParams(searchParams);
         newParams.set("sortOrder", newOrder);
         setSearchParams(newParams);
-        setSortOrder(newOrder);
     };
 
     return(

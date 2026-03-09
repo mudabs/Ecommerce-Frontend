@@ -39,3 +39,19 @@ export const filterAndSortProducts = (products, filters) => (dispatch) => {
         payload: filtered,
     });
 };
+
+// Client-side sorting action (for backend-filtered products)
+export const sortProducts = (products, sortOrder) => (dispatch) => {
+    let sorted = [...(products || [])];
+
+    sorted.sort((a, b) => {
+        const priceA = parseFloat(a.price) || 0;
+        const priceB = parseFloat(b.price) || 0;
+        return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
+    });
+
+    dispatch({
+        type: "SET_FILTERED_PRODUCTS",
+        payload: sorted,
+    });
+};

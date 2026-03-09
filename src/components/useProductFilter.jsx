@@ -1,34 +1,37 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProductsAction, filterAndSortProducts } from "../store/actions";
+import { fetchProductsAction, sortProducts } from "../store/actions";
 
 const useProductFilter = () => {
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
     const { products } = useSelector((state) => state.product);
 
-    // Fetch ALL products once on mount
+    // Build query string and fetch filtered products from backend
     useEffect(() => {
-        dispatch(fetchProductsAction());
-    }, [dispatch]);
+        const searchTerm = searchParams.get("searchTerm") || "";
+        const category = searchParams.get("category") || "";
 
-    // Apply client-side filtering based on URL params
+        let queryString = "";
+        if (searchTerm.trim()) {
+            queryString += `keyword=${encodeURIComponent(searchTerm.trim())}&`;
+        }
+        if (category && category !== "all") {
+            queryString += `category=${encodeURIComponent(category)}&`;
+        }
+        // Remove trailing &
+        queryString = queryString.slice(0, -1);
+
+        dispatch(fetchProductsAction(queryString));
+    }, [dispatch, searchParams]);
+
+    // Apply client-side sorting
     useEffect(() => {
         if (!products) return;
 
-        const searchTerm = searchParams.get("searchTerm") || "";
-        const category = searchParams.get("category") || null;
         const sortOrder = searchParams.get("sortOrder") || "asc";
-
-        const filters = { 
-            searchTerm, 
-            category, 
-            sortOrder 
-        };
-        
-        dispatch(filterAndSortProducts(products, filters));
-
+        dispatch(sortProducts(products, sortOrder));
     }, [dispatch, products, searchParams]);
 
     return {

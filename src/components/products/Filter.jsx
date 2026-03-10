@@ -3,8 +3,8 @@ import { FiArrowUp, FiArrowDown, FiRefreshCw, FiSearch } from "react-icons/fi";
 import { FormControl, InputLabel, Select, MenuItem, Tooltip, Button } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCategories } from "../store/actions";
-import Loader from "./Loader";
+import { fetchCategories } from "../../store/actions";
+import Loader from "../shared/Loader";
 
 const Filter = () => {
     const dispatch = useDispatch();
@@ -67,6 +67,10 @@ const Filter = () => {
 
     const handleClearFilters = () => {
         const newParams = new URLSearchParams();
+        const pageSize = searchParams.get("pageSize");
+        if (pageSize) {
+            newParams.set("pageSize", pageSize);
+        }
         newParams.set("page", "1");
         setSearchParams(newParams);
         setCategory("all");

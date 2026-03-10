@@ -13,7 +13,10 @@ const useProductFilter = () => {
     const sortOrder = searchParams.get("sortOrder") || "asc";
     const pageParam = Number(searchParams.get("page") || "1");
     const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
-    const pageSize = pagination?.pageSize || 2;
+    const pageSizeParam = Number(searchParams.get("pageSize") || "");
+    const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0
+        ? pageSizeParam
+        : (pagination?.pageSize || 2);
 
     // Fetch products when filters/page change (server can paginate)
     useEffect(() => {

@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { useSelector } from "react-redux";
-import Loader from "./Loader";
+import Loader from "./shared/Loader";
 import { AuthContext } from "../context/AuthContext";
 
 const GlobalLoader = () => {

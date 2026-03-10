@@ -4,7 +4,11 @@ import api from '../../api/api';
 export const fetchProductsAction = (queryString = "") => async (dispatch) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        
+
+        const params = new URLSearchParams(queryString);
+        const requestedPageSize = Number(params.get("pageSize") || "");
+        const fallbackPageSize = Number.isFinite(requestedPageSize) && requestedPageSize > 0 ? requestedPageSize : 2;
+
         const url = queryString 
             ? `${import.meta.env.VITE_API_PUBLIC_BASE_URL}/products?${queryString}`
             : `${import.meta.env.VITE_API_PUBLIC_BASE_URL}/products`;
@@ -44,7 +48,7 @@ export const fetchProductsAction = (queryString = "") => async (dispatch) => {
             type: "FETCH_PRODUCTS",
             payload: productsArray,
             pageNumber: pagination.pageNumber ?? 0,
-            pageSize: pagination.pageSize ?? 2,
+            pageSize: pagination.pageSize ?? fallbackPageSize,
             totalElements: pagination.totalElements ?? productsArray.length,
             totalPages: pagination.totalPages ?? 1,
             lastPage: pagination.lastPage ?? true,

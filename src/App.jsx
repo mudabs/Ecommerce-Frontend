@@ -1,6 +1,6 @@
 
 import './App.css'
-import Products from './components/Products'
+import Products from './components/products/Products'
 import GlobalLoader from './components/GlobalLoader'
 
 function App() {

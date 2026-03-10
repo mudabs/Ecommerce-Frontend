@@ -1,11 +1,11 @@
 import { FaExclamationTriangle } from "react-icons/fa";
-import ProductCard from "./ProductCard";
+import ProductCard from "../shared/ProductCard";
 import { useSelector } from "react-redux";
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import useProductFilter from "./useProductFilter";
+import useProductFilter from "../../hooks/useProductFilter";
 import Filter from "./Filter";
-import Pagination from "./Pagination";
+import Pagination from "../shared/Pagination";
 
 const Products = () => {
     // Use the custom hook to handle filtering
@@ -17,7 +17,10 @@ const Products = () => {
 
     // Use filtered products if available, otherwise use raw products
     const displayProducts = isServerPaginated ? products : (filteredProducts || products);
-    const pageSize = pagination?.pageSize || 2;
+    const pageSizeParam = Number(searchParams.get("pageSize") || "");
+    const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0
+        ? pageSizeParam
+        : (pagination?.pageSize || 2);
     const totalItems = displayProducts?.length || 0;
     const totalPages = isServerPaginated
         ? (pagination?.totalPages || 1)
@@ -48,6 +51,13 @@ const Products = () => {
         setSearchParams(nextParams);
     };
 
+    const handlePageSizeChange = (size) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set("pageSize", String(size));
+        nextParams.set("page", "1");
+        setSearchParams(nextParams);
+    };
+
     return(
         <div className="lg:px-14 sm:px-8 px-4 2xl:w-[90%] 2xl:mx-auto">
             {/* This checks if loading, else errorMessage else displays the products */}
@@ -72,6 +82,8 @@ const Products = () => {
                                 currentPage={safePage}
                                 totalPages={totalPages}
                                 onPageChange={handlePageChange}
+                                pageSize={pageSize}
+                                onPageSizeChange={handlePageSizeChange}
                             />
                         </>
                     ) : (

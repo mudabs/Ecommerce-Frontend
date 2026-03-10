@@ -11,6 +11,7 @@ const Filter = () => {
     const dispatch = useDispatch();
     const categories = Array.isArray(useSelector(state => state.product.categories)) ? useSelector(state => state.product.categories) : [];
     const loading = useSelector(state => state.product.loading);
+    const error = useSelector(state => state.product.error);
 
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -102,6 +103,11 @@ const Filter = () => {
                             {loading && (
                                 <MenuItem disabled>
                                     <Loader text="Loading categories..." height={15} width={15} />
+                                </MenuItem>
+                            )}
+                            {error && (
+                                <MenuItem disabled>
+                                    <span style={{ color: 'red' }}>Failed to load categories</span>
                                 </MenuItem>
                             )}
                             {categories.map((cat) => (

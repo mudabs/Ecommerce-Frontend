@@ -5,11 +5,11 @@ const Pagination = ({
     totalPages,
     onPageChange,
     pageSize,
-    pageSizeOptions = [2, 4, 8, 12, 16],
+    pageSizeOptions = [2, 10, 20, 50, 100],
     onPageSizeChange,
     className = "",
 }) => {
-    const showPager = totalPages > 1;
+    const showPager = totalPages >= 1;
     const showPageSize = typeof onPageSizeChange === "function";
 
     return (

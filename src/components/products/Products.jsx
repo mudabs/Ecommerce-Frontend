@@ -22,8 +22,10 @@ const Products = () => {
         ? pageSizeParam
         : (pagination?.pageSize || 2);
     const totalItems = displayProducts?.length || 0;
+    const totalElements = pagination?.totalElements || totalItems;
+    const computedServerPages = Math.max(1, Math.ceil(totalElements / pageSize));
     const totalPages = isServerPaginated
-        ? (pagination?.totalPages || 1)
+        ? (pagination?.totalPages || computedServerPages)
         : Math.max(1, Math.ceil(totalItems / pageSize));
     const pageParam = Number(searchParams.get("page") || "1");
     const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;

@@ -1,12 +1,13 @@
 
-import { FaBeer } from 'react-icons/fa'
 import './App.css'
-import Products from './components/Products'
+import Products from './components/products/Products'
+import GlobalLoader from './components/GlobalLoader'
 
 function App() {
 
   return (
-     <div >
+     <div>
+      <GlobalLoader />
       <Products />
   </div>
   )

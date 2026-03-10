@@ -1,23 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiArrowUp, FiArrowDown, FiRefreshCw, FiSearch } from "react-icons/fi";
 import { FormControl, InputLabel, Select, MenuItem, Tooltip, Button } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCategories } from "../../store/actions";
+import Loader from "../shared/Loader";
 
 const Filter = () => {
-    const categories = [
-        {categoryId: 1, categoryName: "Electronics"},
-        {categoryId: 2, categoryName: "Clothing"},
-        {categoryId: 3, categoryName: "Home & Kitchen"},
-        {categoryId: 4, categoryName: "Books"},
-        {categoryId: 5, categoryName: "Toys & Games"},
-        {categoryId: 6, categoryName: "Sports & Outdoors"},
-    ];
+    const dispatch = useDispatch();
+    const categories = Array.isArray(useSelector(state => state.product.categories)) ? useSelector(state => state.product.categories) : [];
+    const loading = useSelector(state => state.product.loading);
+    const error = useSelector(state => state.product.error);
 
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [category, setCategory] = useState("all");
     const [sortOrder, setSortOrder] = useState("asc");
     const [searchTerm, setSearchTerm] = useState("");
+    const lastSearchTermRef = useRef("");
+
+    useEffect(() => {
+        dispatch(fetchCategories());
+    }, [dispatch]);
 
     useEffect(() => {
         const currentCategory = searchParams.get("category") || "all";
@@ -27,10 +31,12 @@ const Filter = () => {
         setCategory(currentCategory);
         setSortOrder(sortOrder);
         setSearchTerm(searchTerm);
+        lastSearchTermRef.current = searchTerm;
     }, [searchParams]);
 
     // Debounce search term to update URL with delay
     useEffect(() => {
+        if (lastSearchTermRef.current === searchTerm) return;
         const delayTimer = setTimeout(() => {
             const newParams = new URLSearchParams(searchParams);
             if (searchTerm.trim() === "") {
@@ -38,7 +44,9 @@ const Filter = () => {
             } else {
                 newParams.set("searchTerm", searchTerm);
             }
+            newParams.set("page", "1");
             setSearchParams(newParams);
+            lastSearchTermRef.current = searchTerm;
         }, 500); // 500ms delay
 
         return () => clearTimeout(delayTimer);
@@ -52,12 +60,19 @@ const Filter = () => {
         } else {
             newParams.set("category", selectedCategory);
         }
+        newParams.set("page", "1");
         setSearchParams(newParams);
         setCategory(e.target.value);
     };
 
     const handleClearFilters = () => {
-        setSearchParams(new URLSearchParams());
+        const newParams = new URLSearchParams();
+        const pageSize = searchParams.get("pageSize");
+        if (pageSize) {
+            newParams.set("pageSize", pageSize);
+        }
+        newParams.set("page", "1");
+        setSearchParams(newParams);
         setCategory("all");
         setSearchTerm("");
     };
@@ -66,6 +81,7 @@ const Filter = () => {
         const newOrder = (sortOrder === "asc" ? "desc" : "asc");
         const newParams = new URLSearchParams(searchParams);
         newParams.set("sortOrder", newOrder);
+        newParams.set("page", "1");
         setSearchParams(newParams);
         setSortOrder(newOrder);
     };
@@ -96,6 +112,16 @@ const Filter = () => {
                             label="Category"
                         >
                             <MenuItem value="all">All Categories</MenuItem>
+                            {loading && (
+                                <MenuItem disabled>
+                                    <Loader text="Loading categories..." height={15} width={15} />
+                                </MenuItem>
+                            )}
+                            {error && (
+                                <MenuItem disabled>
+                                    <span style={{ color: 'red' }}>Failed to load categories</span>
+                                </MenuItem>
+                            )}
                             {categories.map((cat) => (
                                 <MenuItem key={cat.categoryId} value={cat.categoryName}>
                                     {cat.categoryName}

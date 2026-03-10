@@ -1,9 +1,14 @@
 import axios from 'axios';
+import api from '../../api/api';
 
 export const fetchProductsAction = (queryString = "") => async (dispatch) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        
+
+        const params = new URLSearchParams(queryString);
+        const requestedPageSize = Number(params.get("pageSize") || "");
+        const fallbackPageSize = Number.isFinite(requestedPageSize) && requestedPageSize > 0 ? requestedPageSize : 2;
+
         const url = queryString 
             ? `${import.meta.env.VITE_API_PUBLIC_BASE_URL}/products?${queryString}`
             : `${import.meta.env.VITE_API_PUBLIC_BASE_URL}/products`;
@@ -18,6 +23,7 @@ export const fetchProductsAction = (queryString = "") => async (dispatch) => {
         // Handle different API response formats
         let productsArray = [];
         let pagination = {};
+        let isServerPaginated = false;
         
         if (Array.isArray(response.data)) {
             productsArray = response.data;
@@ -25,6 +31,7 @@ export const fetchProductsAction = (queryString = "") => async (dispatch) => {
             productsArray = response.data.data;
         } else if (response.data?.content && Array.isArray(response.data.content)) {
             productsArray = response.data.content;
+            isServerPaginated = true;
             // Extract pagination info if available
             pagination = {
                 pageNumber: response.data.pageNumber,
@@ -40,16 +47,35 @@ export const fetchProductsAction = (queryString = "") => async (dispatch) => {
         dispatch({
             type: "FETCH_PRODUCTS",
             payload: productsArray,
-            pageNumber: pagination.pageNumber || 0,
-            pageSize: pagination.pageSize || 10,
-            totalElements: pagination.totalElements || productsArray.length,
-            totalPages: pagination.totalPages || 1,
-            lastPage: pagination.lastPage || true,
+            pageNumber: pagination.pageNumber ?? 0,
+            pageSize: pagination.pageSize ?? fallbackPageSize,
+            totalElements: pagination.totalElements ?? productsArray.length,
+            totalPages: pagination.totalPages ?? 1,
+            lastPage: pagination.lastPage ?? true,
+            isServerPaginated,
         });
         
         dispatch({ type: "IS_SUCCESS" });
     } catch (error) {
         const errorMsg = error.response?.data?.message || error.message || "Failed to fetch products";
+        dispatch({
+            type: "IS_ERROR",
+            payload: errorMsg,
+        });
+    }
+};
+
+export const fetchCategories = () => async (dispatch) => {
+    try {
+        dispatch({ type: "IS_FETCHING" });
+        const { data } = await api.get(`/public/categories`);
+        dispatch({
+            type: "FETCH_CATEGORIES",
+            payload: data,
+        });
+        dispatch({ type: "IS_SUCCESS" });
+    } catch (error) {
+        const errorMsg = error?.response?.data?.message || "Failed to fetch categories";
         dispatch({
             type: "IS_ERROR",
             payload: errorMsg,

@@ -7,7 +7,7 @@ import { fetchCategories } from "../store/actions";
 
 const Filter = () => {
     const dispatch = useDispatch();
-    const categories = useSelector(state => state.product.categories) || [];
+    const categories = Array.isArray(useSelector(state => state.product.categories)) ? useSelector(state => state.product.categories) : [];
 
     const [searchParams, setSearchParams] = useSearchParams();
 

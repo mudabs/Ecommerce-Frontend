@@ -6,20 +6,30 @@ import { fetchProductsAction, filterAndSortProducts } from "../store/actions";
 const useProductFilter = () => {
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
-    const { products } = useSelector((state) => state.product);
+    const { products, isServerPaginated, pagination } = useSelector((state) => state.product);
 
-    // Fetch ALL products once on mount
+    const searchTerm = searchParams.get("searchTerm") || "";
+    const category = searchParams.get("category") || null;
+    const sortOrder = searchParams.get("sortOrder") || "asc";
+    const pageParam = Number(searchParams.get("page") || "1");
+    const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+    const pageSize = pagination?.pageSize || 2;
+
+    // Fetch products when filters/page change (server can paginate)
     useEffect(() => {
-        dispatch(fetchProductsAction());
-    }, [dispatch]);
+        const params = new URLSearchParams();
+        params.set("pageNumber", String(Math.max(0, currentPage - 1)));
+        params.set("pageSize", String(pageSize));
+        if (searchTerm.trim() !== "") params.set("searchTerm", searchTerm.trim());
+        if (category && category !== "all") params.set("category", category);
+        if (sortOrder) params.set("sortOrder", sortOrder);
+
+        dispatch(fetchProductsAction(params.toString()));
+    }, [dispatch, searchTerm, category, sortOrder, currentPage, pageSize]);
 
     // Apply client-side filtering based on URL params
     useEffect(() => {
-        if (!products) return;
-
-        const searchTerm = searchParams.get("searchTerm") || "";
-        const category = searchParams.get("category") || null;
-        const sortOrder = searchParams.get("sortOrder") || "asc";
+        if (!products || isServerPaginated) return;
 
         const filters = { 
             searchTerm, 
@@ -29,12 +39,12 @@ const useProductFilter = () => {
         
         dispatch(filterAndSortProducts(products, filters));
 
-    }, [dispatch, products, searchParams]);
+    }, [dispatch, products, isServerPaginated, searchTerm, category, sortOrder]);
 
     return {
-        sortOrder: searchParams.get("sortOrder") || "asc",
-        category: searchParams.get("category") || null,
-        searchTerm: searchParams.get("searchTerm") || null,
+        sortOrder,
+        category,
+        searchTerm,
     };
 };
 

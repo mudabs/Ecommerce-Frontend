@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiArrowUp, FiArrowDown, FiRefreshCw, FiSearch } from "react-icons/fi";
 import { FormControl, InputLabel, Select, MenuItem, Tooltip, Button } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
@@ -17,6 +17,7 @@ const Filter = () => {
     const [category, setCategory] = useState("all");
     const [sortOrder, setSortOrder] = useState("asc");
     const [searchTerm, setSearchTerm] = useState("");
+    const lastSearchTermRef = useRef("");
 
     useEffect(() => {
         dispatch(fetchCategories());
@@ -30,10 +31,12 @@ const Filter = () => {
         setCategory(currentCategory);
         setSortOrder(sortOrder);
         setSearchTerm(searchTerm);
+        lastSearchTermRef.current = searchTerm;
     }, [searchParams]);
 
     // Debounce search term to update URL with delay
     useEffect(() => {
+        if (lastSearchTermRef.current === searchTerm) return;
         const delayTimer = setTimeout(() => {
             const newParams = new URLSearchParams(searchParams);
             if (searchTerm.trim() === "") {
@@ -43,6 +46,7 @@ const Filter = () => {
             }
             newParams.set("page", "1");
             setSearchParams(newParams);
+            lastSearchTermRef.current = searchTerm;
         }, 500); // 500ms delay
 
         return () => clearTimeout(delayTimer);

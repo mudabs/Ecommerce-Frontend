@@ -12,23 +12,26 @@ const Products = () => {
     useProductFilter();
     
     const { isLoading, errorMessage } = useSelector((state) => state.errors);
-    const { filteredProducts, products, pagination } = useSelector((state) => state.product);
+    const { filteredProducts, products, pagination, isServerPaginated } = useSelector((state) => state.product);
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Use filtered products if available, otherwise use raw products
-    const displayProducts = filteredProducts || products;
-    const pageSize = pagination?.pageSize || 8;
+    const displayProducts = isServerPaginated ? products : (filteredProducts || products);
+    const pageSize = pagination?.pageSize || 2;
     const totalItems = displayProducts?.length || 0;
-    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const totalPages = isServerPaginated
+        ? (pagination?.totalPages || 1)
+        : Math.max(1, Math.ceil(totalItems / pageSize));
     const pageParam = Number(searchParams.get("page") || "1");
     const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
     const safePage = Math.min(currentPage, totalPages);
 
     const paginatedProducts = useMemo(() => {
         if (!displayProducts?.length) return [];
+        if (isServerPaginated) return displayProducts;
         const startIndex = (safePage - 1) * pageSize;
         return displayProducts.slice(startIndex, startIndex + pageSize);
-    }, [displayProducts, pageSize, safePage]);
+    }, [displayProducts, pageSize, safePage, isServerPaginated]);
 
     useEffect(() => {
         if (currentPage !== safePage) {

@@ -2,7 +2,14 @@ const initialState = {
     products: null,
     filteredProducts: null,
     categories: null,
-    pagination: {},
+    pagination: {
+        pageNumber: 0,
+        pageSize: 2,
+        totalElements: 0,
+        totalPages: 1,
+        lastPage: true,
+    },
+    isServerPaginated: false,
     loading: false,
     error: null,
 };
@@ -14,6 +21,7 @@ export const ProductReducer = (state = initialState, action) => {
                 ...state,
                 products: action.payload,
                 filteredProducts: action.payload, // Reset filtered when fetching
+                isServerPaginated: action.isServerPaginated ?? state.isServerPaginated,
                 pagination: {
                     ...state.pagination,
                     pageNumber: action.pageNumber,

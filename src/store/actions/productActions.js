@@ -19,6 +19,7 @@ export const fetchProductsAction = (queryString = "") => async (dispatch) => {
         // Handle different API response formats
         let productsArray = [];
         let pagination = {};
+        let isServerPaginated = false;
         
         if (Array.isArray(response.data)) {
             productsArray = response.data;
@@ -26,6 +27,7 @@ export const fetchProductsAction = (queryString = "") => async (dispatch) => {
             productsArray = response.data.data;
         } else if (response.data?.content && Array.isArray(response.data.content)) {
             productsArray = response.data.content;
+            isServerPaginated = true;
             // Extract pagination info if available
             pagination = {
                 pageNumber: response.data.pageNumber,
@@ -41,11 +43,12 @@ export const fetchProductsAction = (queryString = "") => async (dispatch) => {
         dispatch({
             type: "FETCH_PRODUCTS",
             payload: productsArray,
-            pageNumber: pagination.pageNumber || 0,
-            pageSize: pagination.pageSize || 10,
-            totalElements: pagination.totalElements || productsArray.length,
-            totalPages: pagination.totalPages || 1,
-            lastPage: pagination.lastPage || true,
+            pageNumber: pagination.pageNumber ?? 0,
+            pageSize: pagination.pageSize ?? 2,
+            totalElements: pagination.totalElements ?? productsArray.length,
+            totalPages: pagination.totalPages ?? 1,
+            lastPage: pagination.lastPage ?? true,
+            isServerPaginated,
         });
         
         dispatch({ type: "IS_SUCCESS" });

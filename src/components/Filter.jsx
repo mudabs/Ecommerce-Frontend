@@ -41,6 +41,7 @@ const Filter = () => {
             } else {
                 newParams.set("searchTerm", searchTerm);
             }
+            newParams.set("page", "1");
             setSearchParams(newParams);
         }, 500); // 500ms delay
 
@@ -55,12 +56,15 @@ const Filter = () => {
         } else {
             newParams.set("category", selectedCategory);
         }
+        newParams.set("page", "1");
         setSearchParams(newParams);
         setCategory(e.target.value);
     };
 
     const handleClearFilters = () => {
-        setSearchParams(new URLSearchParams());
+        const newParams = new URLSearchParams();
+        newParams.set("page", "1");
+        setSearchParams(newParams);
         setCategory("all");
         setSearchTerm("");
     };
@@ -69,6 +73,7 @@ const Filter = () => {
         const newOrder = (sortOrder === "asc" ? "desc" : "asc");
         const newParams = new URLSearchParams(searchParams);
         newParams.set("sortOrder", newOrder);
+        newParams.set("page", "1");
         setSearchParams(newParams);
         setSortOrder(newOrder);
     };

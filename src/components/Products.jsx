@@ -1,7 +1,8 @@
 import { FaExclamationTriangle } from "react-icons/fa";
 import ProductCard from "./ProductCard";
 import { useSelector } from "react-redux";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import useProductFilter from "./useProductFilter";
 import Filter from "./Filter";
 import Pagination from "./Pagination";
@@ -12,13 +13,15 @@ const Products = () => {
     
     const { isLoading, errorMessage } = useSelector((state) => state.errors);
     const { filteredProducts, products, pagination } = useSelector((state) => state.product);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Use filtered products if available, otherwise use raw products
     const displayProducts = filteredProducts || products;
     const pageSize = pagination?.pageSize || 8;
     const totalItems = displayProducts?.length || 0;
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const pageParam = Number(searchParams.get("page") || "1");
+    const currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
     const safePage = Math.min(currentPage, totalPages);
 
     const paginatedProducts = useMemo(() => {
@@ -28,14 +31,19 @@ const Products = () => {
     }, [displayProducts, pageSize, safePage]);
 
     useEffect(() => {
-        setCurrentPage(1);
-    }, [displayProducts, pageSize]);
-
-    useEffect(() => {
         if (currentPage !== safePage) {
-            setCurrentPage(safePage);
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set("page", String(safePage));
+            setSearchParams(nextParams);
         }
-    }, [currentPage, safePage]);
+    }, [currentPage, safePage, searchParams, setSearchParams]);
+
+    const handlePageChange = (page) => {
+        const nextPage = Math.min(Math.max(1, page), totalPages);
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set("page", String(nextPage));
+        setSearchParams(nextParams);
+    };
 
     return(
         <div className="lg:px-14 sm:px-8 px-4 2xl:w-[90%] 2xl:mx-auto">
@@ -60,7 +68,7 @@ const Products = () => {
                             <Pagination
                                 currentPage={safePage}
                                 totalPages={totalPages}
-                                onPageChange={setCurrentPage}
+                                onPageChange={handlePageChange}
                             />
                         </>
                     ) : (

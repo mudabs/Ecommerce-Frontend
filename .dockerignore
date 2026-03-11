@@ -1,0 +1,15 @@
+node_modules
+dist
+.git
+.gitignore
+README.md
+Readme.md
+Dockerfile
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.local
+*.log
+ecom-frontend-*.tgz
+SmartCart_Ecommerce_Psd

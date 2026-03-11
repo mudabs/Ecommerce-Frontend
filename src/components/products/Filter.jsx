@@ -8,31 +8,19 @@ import Loader from "../shared/Loader";
 
 const Filter = () => {
     const dispatch = useDispatch();
-    const categories = Array.isArray(useSelector(state => state.product.categories)) ? useSelector(state => state.product.categories) : [];
-    const loading = useSelector(state => state.product.loading);
-    const error = useSelector(state => state.product.error);
+    const { categories: productCategories, loading, error } = useSelector((state) => state.product);
+    const categories = Array.isArray(productCategories) ? productCategories : [];
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const [category, setCategory] = useState("all");
-    const [sortOrder, setSortOrder] = useState("asc");
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("searchTerm") || "");
     const lastSearchTermRef = useRef("");
+    const category = searchParams.get("category") || "all";
+    const sortOrder = searchParams.get("sortOrder") || "asc";
 
     useEffect(() => {
         dispatch(fetchCategories());
     }, [dispatch]);
-
-    useEffect(() => {
-        const currentCategory = searchParams.get("category") || "all";
-        const sortOrder = searchParams.get("sortOrder") || "asc";
-        const searchTerm = searchParams.get("searchTerm") || "";
-
-        setCategory(currentCategory);
-        setSortOrder(sortOrder);
-        setSearchTerm(searchTerm);
-        lastSearchTermRef.current = searchTerm;
-    }, [searchParams]);
 
     // Debounce search term to update URL with delay
     useEffect(() => {
@@ -62,7 +50,6 @@ const Filter = () => {
         }
         newParams.set("page", "1");
         setSearchParams(newParams);
-        setCategory(e.target.value);
     };
 
     const handleClearFilters = () => {
@@ -73,17 +60,15 @@ const Filter = () => {
         }
         newParams.set("page", "1");
         setSearchParams(newParams);
-        setCategory("all");
         setSearchTerm("");
     };
 
-    const toggleSortOrder = (e) => {
+    const toggleSortOrder = () => {
         const newOrder = (sortOrder === "asc" ? "desc" : "asc");
         const newParams = new URLSearchParams(searchParams);
         newParams.set("sortOrder", newOrder);
         newParams.set("page", "1");
         setSearchParams(newParams);
-        setSortOrder(newOrder);
     };
 
     return(

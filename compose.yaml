@@ -1,5 +1,6 @@
 services:
   frontend:
+    container_name: ecommerce-frontend
     build:
       context: .
       dockerfile: Dockerfile

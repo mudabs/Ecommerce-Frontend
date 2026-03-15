@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { FaShoppingCart } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
 import ProductViewModal from './ProductViewModal';
 import TextTruncate from '../../utils/TextTruncate';
 import { getImageUrl } from '../../utils/imageUtils';
+import { addToCart } from '../../store/actions';
 
 const ProductCard = ({
     productId,
@@ -17,6 +19,7 @@ const ProductCard = ({
     const [openProductViewModal, setOpenProductViewModal] = useState(false);
     const btnLoader = false;
     const [selectedViewProduct, setSelectedViewProduct] = useState("");
+    const dispatch = useDispatch();
     const isAvailable = quantity && Number(quantity) > 0;
     const handleProductView = (product) => {
         setSelectedViewProduct(product);
@@ -65,7 +68,18 @@ const ProductCard = ({
 
                 <button
                     disabled={!isAvailable || btnLoader}
-                    onClick={() => {}}
+                    type="button"
+                    onClick={() => dispatch(addToCart({
+                        productId,
+                        productName,
+                        image,
+                        description,
+                        quantity,
+                        price,
+                        discount,
+                        specialPrice,
+                    }, 1))}
+                    aria-label={`Add ${productName} to cart`}
                     className={`bg-blue-500 ${isAvailable ? "opacity-100 hover:bg-blue-600" : "opacity-70"} 
                      text-white py-2 px-3 rounded-lg mt-4 transition-colors duration-300 w-36 flex justify-center`}>
                     <FaShoppingCart className='mr-2 mt-1'/>

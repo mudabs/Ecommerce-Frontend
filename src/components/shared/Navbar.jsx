@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { Badge } from '@mui/material';
 import { FaStore } from 'react-icons/fa';
+import { FaShoppingCart } from 'react-icons/fa';
 import { IoIosMenu } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
+import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
     const path = useLocation().pathname;
     const [navbarOpen, setNavbarOpen] = useState(false);
+    const { cart } = useSelector((state) => state.carts);
+    const cartCount = cart?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0;
 
     return (
         <div className="h-17.5 bg-custom-gradient text-white z-50 flex items-center sticky top-0">
@@ -42,6 +47,24 @@ const Navbar = () => {
                     <li className="font-medium transition-all duration-150">
                         <Link className={`${path === '/contact' ? 'text-white font-semibold' : 'text-gray-200'}`} to="/contact">
                             Contact
+                        </Link>
+                    </li>
+
+                    <li className="font-medium transition-all duration-150">
+                        <Link
+                            className={`${path === '/cart' ? 'text-white font-semibold' : 'text-gray-200'}`}
+                            to="/cart"
+                            aria-label={`Cart with ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+                        >
+                            <Badge
+                                showZero
+                                badgeContent={cartCount}
+                                color="primary"
+                                overlap="circular"
+                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            >
+                                <FaShoppingCart size={22} />
+                            </Badge>
                         </Link>
                     </li>
                 </ul>

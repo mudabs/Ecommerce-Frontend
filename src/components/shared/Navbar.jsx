@@ -9,7 +9,7 @@ const Navbar = () => {
     const [navbarOpen, setNavbarOpen] = useState(false);
 
     return (
-        <div className="h-[70px] bg-custom-gradient text-white z-50 flex items-center sticky top-0">
+        <div className="h-17.5 bg-custom-gradient text-white z-50 flex items-center sticky top-0">
             <div className="lg:px-14 sm:px-8 px-4 w-full flex justify-between">
                 <Link to="/" className="flex items-center text-2xl font-bold">
                     <FaStore className="mr-2 text-3xl" />

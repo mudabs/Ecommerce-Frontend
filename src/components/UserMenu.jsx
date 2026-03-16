@@ -89,7 +89,7 @@ const UserMenu = () => {
                 )}
 
                 <MenuItem className="flex gap-2" onClick={logOutHandler}>
-                    <div className="font-semibold w-full flex gap-2 items-center bg-button-gradient px-4 py-1 text-white rounded-xs">
+                    <div className="font-semibold w-full flex gap-2 items-center bg-[oklch(0.25_0.03_263.86)] px-4 py-1 text-white rounded-xs hover:bg-[oklch(0.3_0.03_263.86)] transition-colors">
                         <IoExitOutline className="text-xl" />
                         <span className="font-bold text-[16px] mt-1">LogOut</span>
                     </div>

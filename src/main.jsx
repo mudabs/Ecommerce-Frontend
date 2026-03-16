@@ -6,6 +6,7 @@ import store from './store/reducers/store';
 import { Provider } from 'react-redux';
 import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')).render(
       <StrictMode>
         <BrowserRouter>
         <App />
+        <Toaster position="top-right" />
         </BrowserRouter>
       </StrictMode>
     </AuthProvider>

@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+const apiBaseUrl = import.meta.env.DEV
+    ? '/api'
+    : (import.meta.env.VITE_API_BASE_URL || '/api');
 
 // Create axios instance with credentials enabled
 const apiClient = axios.create({

@@ -4,24 +4,16 @@ import { FaStore } from 'react-icons/fa';
 import { FaShoppingCart } from 'react-icons/fa';
 import { IoIosMenu } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
-import { FaUserCircle } from 'react-icons/fa';
-import { useSelector, useDispatch } from 'react-redux';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { logoutUser } from '../../store/actions';
+import UserMenu from '../UserMenu';
+import { useSelector } from 'react-redux';
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
     const path = useLocation().pathname;
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
     const [navbarOpen, setNavbarOpen] = useState(false);
     const { cart } = useSelector((state) => state.carts);
-    const { isAuthenticated, user } = useSelector((state) => state.auth);
+    const { isAuthenticated } = useSelector((state) => state.auth);
     const cartCount = cart?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0;
-
-    const handleLogout = () => {
-        dispatch(logoutUser(navigate));
-        setNavbarOpen(false);
-    };
 
     return (
         <div className="h-17.5 bg-custom-gradient text-white z-50 flex items-center sticky top-0">
@@ -80,23 +72,16 @@ const Navbar = () => {
 
                     {isAuthenticated ? (
                         <>
-                            <li className="font-medium flex items-center gap-1 text-gray-200">
-                                <FaUserCircle size={18} />
-                                <span className="text-sm">{user?.username ?? user?.email ?? 'Account'}</span>
-                            </li>
                             <li className="font-medium transition-all duration-150">
-                                <button
-                                    onClick={handleLogout}
-                                    className="text-gray-200 hover:text-white transition-colors duration-150"
-                                >
-                                    Logout
-                                </button>
+                                <UserMenu />
                             </li>
                         </>
                     ) : (
                         <li className="font-medium transition-all duration-150">
                             <Link
-                                className={`${path === '/login' ? 'text-white font-semibold' : 'text-gray-200'} hover:text-white`}
+                                className={`flex items-center space-x-2 px-4 py-[6px] rounded-md shadow-lg transition duration-300 ease-in-out transform bg-linear-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 ${
+                                    path === '/login' ? 'text-white font-semibold' : 'text-white'
+                                }`}
                                 to="/login"
                             >
                                 Login

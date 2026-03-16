@@ -16,7 +16,12 @@ const authService = {
             const response = await apiClient.post('/signup', userData);
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            const data = error.response?.data;
+            const message =
+                (typeof data === 'string' ? data : data?.message || data?.error) ||
+                error.message ||
+                'Registration failed.';
+            throw new Error(message);
         }
     },
 
@@ -26,7 +31,12 @@ const authService = {
             const response = await apiClient.post('/signin', credentials);
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            const data = error.response?.data;
+            const message =
+                (typeof data === 'string' ? data : data?.message || data?.error) ||
+                error.message ||
+                'Login failed.';
+            throw new Error(message);
         }
     },
 
@@ -36,7 +46,12 @@ const authService = {
             const response = await apiClient.post('/signout');
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            const data = error.response?.data;
+            const message =
+                (typeof data === 'string' ? data : data?.message || data?.error) ||
+                error.message ||
+                'Logout failed.';
+            throw new Error(message);
         }
     },
 
@@ -46,7 +61,12 @@ const authService = {
             const response = await apiClient.get('/user');
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            const data = error.response?.data;
+            const message =
+                (typeof data === 'string' ? data : data?.message || data?.error) ||
+                error.message ||
+                'Failed to load user.';
+            throw new Error(message);
         }
     },
 };

@@ -1,77 +1,30 @@
-import { useState, useCallback } from 'react';
-import authService from '../services/authService';
+import { useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { AuthContext } from './AuthContextObject';
+import { logoutUser } from '../store/actions';
 
 export { AuthContext } from './AuthContextObject';
 
+/**
+ * AuthProvider is a thin bridge that exposes the Redux auth slice
+ * through React Context, so both useAuth() and any direct useSelector()
+ * calls see the same single source of truth.
+ */
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const dispatch = useDispatch();
+    const { user, isAuthenticated, roles } = useSelector((state) => state.auth);
 
-    const signin = useCallback(async (email, password) => {
-        setLoading(true);
-        try {
-            const response = await authService.signin({ email, password });
-            setUser(response.user || response);
-            setIsAuthenticated(true);
-            return response;
-        } catch (error) {
-            setIsAuthenticated(false);
-            throw error;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const signup = useCallback(async (userData) => {
-        setLoading(true);
-        try {
-            const response = await authService.signup(userData);
-            setUser(response.user || response);
-            setIsAuthenticated(true);
-            return response;
-        } catch (error) {
-            setIsAuthenticated(false);
-            throw error;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const signout = useCallback(async () => {
-        setLoading(true);
-        try {
-            await authService.signout();
-            setUser(null);
-            setIsAuthenticated(false);
-        } catch (error) {
-            console.error('Signout error:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const getCurrentUser = useCallback(async () => {
-        try {
-            const response = await authService.getCurrentUser();
-            setUser(response);
-            setIsAuthenticated(true);
-            return response;
-        } catch {
-            setIsAuthenticated(false);
-            return null;
-        }
-    }, []);
+    const signout = useCallback(
+        (navigate) => dispatch(logoutUser(navigate)),
+        [dispatch]
+    );
 
     const value = {
         user,
         isAuthenticated,
-        loading,
-        signin,
-        signup,
+        roles,
+        loading: false,   // loading is handled per-action via local setLoader
         signout,
-        getCurrentUser,
     };
 
     return (

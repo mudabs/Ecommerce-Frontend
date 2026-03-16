@@ -4,14 +4,24 @@ import { FaStore } from 'react-icons/fa';
 import { FaShoppingCart } from 'react-icons/fa';
 import { IoIosMenu } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
-import { useSelector } from 'react-redux';
-import { Link, useLocation } from 'react-router-dom';
+import { FaUserCircle } from 'react-icons/fa';
+import { useSelector, useDispatch } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { logoutUser } from '../../store/actions';
 
 const Navbar = () => {
     const path = useLocation().pathname;
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [navbarOpen, setNavbarOpen] = useState(false);
     const { cart } = useSelector((state) => state.carts);
+    const { isAuthenticated, user } = useSelector((state) => state.auth);
     const cartCount = cart?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0;
+
+    const handleLogout = () => {
+        dispatch(logoutUser(navigate));
+        setNavbarOpen(false);
+    };
 
     return (
         <div className="h-17.5 bg-custom-gradient text-white z-50 flex items-center sticky top-0">
@@ -22,7 +32,7 @@ const Navbar = () => {
                 </Link>
 
                 <ul
-                    className={`flex sm:gap-10 gap-4 sm:items-center text-slate-800 sm:static absolute left-0 top-[70px] sm:shadow-none shadow-md ${
+                    className={`flex sm:gap-10 gap-4 sm:items-center text-slate-800 sm:static absolute left-0 top-17.5 sm:shadow-none shadow-md ${
                         navbarOpen ? 'h-fit sm:pb-0 pb-5' : 'h-0 overflow-hidden'
                     } transition-all duration-100 sm:h-fit sm:bg-none bg-custom-gradient text-white sm:w-fit w-full sm:flex-row flex-col px-4 sm:px-0`}
                 >
@@ -67,6 +77,32 @@ const Navbar = () => {
                             </Badge>
                         </Link>
                     </li>
+
+                    {isAuthenticated ? (
+                        <>
+                            <li className="font-medium flex items-center gap-1 text-gray-200">
+                                <FaUserCircle size={18} />
+                                <span className="text-sm">{user?.username ?? user?.email ?? 'Account'}</span>
+                            </li>
+                            <li className="font-medium transition-all duration-150">
+                                <button
+                                    onClick={handleLogout}
+                                    className="text-gray-200 hover:text-white transition-colors duration-150"
+                                >
+                                    Logout
+                                </button>
+                            </li>
+                        </>
+                    ) : (
+                        <li className="font-medium transition-all duration-150">
+                            <Link
+                                className={`${path === '/login' ? 'text-white font-semibold' : 'text-gray-200'} hover:text-white`}
+                                to="/login"
+                            >
+                                Login
+                            </Link>
+                        </li>
+                    )}
                 </ul>
 
                 <button onClick={() => setNavbarOpen(!navbarOpen)} className="sm:hidden flex items-center sm:mt-0 mt-2">

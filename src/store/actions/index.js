@@ -9,3 +9,4 @@ export {
 	removeFromCart,
 	clearCart,
 } from './cartActions';
+export { authenticateSignInUser, registerNewUser, logoutUser } from './authActions';

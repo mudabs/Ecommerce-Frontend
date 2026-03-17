@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { FaShoppingCart } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import ProductViewModal from './ProductViewModal';
 import TextTruncate from '../../utils/TextTruncate';
@@ -80,9 +79,8 @@ const ProductCard = ({
                         specialPrice,
                     }, 1))}
                     aria-label={`Add ${productName} to cart`}
-                    className={`bg-blue-500 ${isAvailable ? "opacity-100 hover:bg-blue-600" : "opacity-70"} 
-                     text-white py-2 px-3 rounded-lg mt-4 transition-colors duration-300 w-36 flex justify-center`}>
-                    <FaShoppingCart className='mr-2 mt-1'/>
+                    className={`bg-[oklch(62.3%_0.214_259.815)] ${isAvailable ? "opacity-100 hover:brightness-95" : "opacity-70"} 
+                     text-white py-2 px-3 rounded-full mt-4 transition-colors duration-300 w-36 flex justify-center`}>
                     {isAvailable ? "Add to Cart" : "Out of Stock"}
                 </button>
                 </div>

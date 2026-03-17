@@ -1,54 +1,150 @@
 import { Button, Step, StepLabel, Stepper } from '@mui/material';
-import React, { useEffect, useState } from 'react'
-import AddressInfo from './AddressInfo';
+import React, { useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { getUserAddresses } from '../../store/actions';
+import { clearCart } from '../../store/actions';
 import toast from 'react-hot-toast';
-import Skeleton from '../shared/Skeleton';
-import ErrorPage from '../shared/ErrorPage';
 import PaymentMethod from './PaymentMethod';
 import OrderSummary from './OrderSummary';
-import StripePayment from './StripePayment';
-import PaypalPayment from './PaypalPayment';
+import { Link, useNavigate } from 'react-router-dom';
+import orderService from '../../services/orderService';
 
 const Checkout = () => {
     const [activeStep, setActiveStep] = useState(0);
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState("Stripe");
+    const [address, setAddress] = useState({
+        buildingName: "",
+        city: "",
+        street: "",
+        state: "",
+        pincode: "",
+        country: "",
+    });
+
     const dispatch = useDispatch();
-    const { isLoading, errorMessage } = useSelector((state) => state.errors);
-    const { cart, totalPrice } = useSelector((state) => state.carts);
-    const { address, selectedUserCheckoutAddress } = useSelector(
-        (state) => state.auth
-    )
-    const { paymentMethod } = useSelector((state) => state.payment);
+    const navigate = useNavigate();
+    const { cart } = useSelector((state) => state.carts);
+    const { isAuthenticated } = useSelector((state) => state.auth);
+
+    const totalPrice = useMemo(
+        () => cart?.reduce(
+            (acc, cur) => acc + (Number(cur?.specialPrice ?? cur?.price ?? 0) * Number(cur?.quantity ?? 0)),
+            0
+        ) ?? 0,
+        [cart]
+    );
+
+    const hasAddress = Object.values(address).every((value) => String(value).trim().length > 0);
+    const hasItems = Array.isArray(cart) && cart.length > 0;
 
     const handleBack = () => {
         setActiveStep((prevStep) => prevStep - 1);
     };
 
     const handleNext = () => {
-        if(activeStep === 0 && !selectedUserCheckoutAddress) {
-            toast.error("Please select checkout address before proceeding.");
+        if(activeStep === 0 && !hasAddress) {
+            toast.error("Please complete the shipping address before proceeding.");
             return;
         }
 
-        if(activeStep === 1 && (!selectedUserCheckoutAddress || !paymentMethod)) {
-            toast.error("Please select payment address before proceeding.");
+        if(activeStep === 1 && !paymentMethod) {
+            toast.error("Please select a payment method before proceeding.");
             return;
         }
         
         setActiveStep((prevStep) => prevStep + 1);
     };
 
+    const placeOrderHandler = async () => {
+        if (!hasItems) {
+            toast.error("Your cart is empty.");
+            return;
+        }
+
+        const orderPayload = {
+            items: cart.map((item) => ({
+                productId: item.productId,
+                quantity: Number(item.quantity) || 1,
+                unitPrice: Number(item.specialPrice ?? item.price ?? 0),
+            })),
+            shippingAddress: {
+                buildingName: address.buildingName,
+                street: address.street,
+                city: address.city,
+                state: address.state,
+                pincode: address.pincode,
+                country: address.country,
+            },
+            paymentMethod,
+            totalAmount: Number(totalPrice),
+            currency: import.meta.env.VITE_ORDER_CURRENCY || 'USD',
+        };
+
+        setIsPlacingOrder(true);
+        try {
+            const orderResponse = await orderService.createOrder(orderPayload);
+            const orderId = orderResponse?.orderId || orderResponse?.id || orderResponse?.data?.orderId || null;
+
+            localStorage.setItem("LAST_ORDER_SUMMARY", JSON.stringify({
+                orderId,
+                totalPrice,
+                paymentMethod,
+                itemCount: cart.length,
+            }));
+
+            dispatch(clearCart());
+            toast.success("Order placed successfully!");
+            navigate("/order-confirm");
+        } catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.message ||
+                'Failed to place order. Please try again.';
+            toast.error(message);
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
+
+    const onAddressChange = (event) => {
+        const { name, value } = event.target;
+        setAddress((prev) => ({ ...prev, [name]: value }));
+    };
+
     const steps = [
         "Address",
         "Payment Method",
         "Order Summary",
-        "Payment",
     ];
-    
-    useEffect(() => {
-        dispatch(getUserAddresses());
-    }, [dispatch]);
+
+    if (!isAuthenticated) {
+        return (
+            <div className='py-14 min-h-[calc(100vh-100px)] flex items-center justify-center'>
+                <div className='max-w-md w-full p-6 border rounded-md text-center shadow-sm'>
+                    <h2 className='text-2xl font-semibold text-slate-800'>Login Required</h2>
+                    <p className='text-slate-600 mt-2'>Please login to continue checkout.</p>
+                    <Link to='/login' className='inline-block mt-4 px-4 py-2 rounded-md bg-custom-blue text-white font-semibold'>
+                        Go to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (!hasItems) {
+        return (
+            <div className='py-14 min-h-[calc(100vh-100px)] flex items-center justify-center'>
+                <div className='max-w-md w-full p-6 border rounded-md text-center shadow-sm'>
+                    <h2 className='text-2xl font-semibold text-slate-800'>Your cart is empty</h2>
+                    <p className='text-slate-600 mt-2'>Add items to cart before checkout.</p>
+                    <Link to='/products' className='inline-block mt-4 px-4 py-2 rounded-md bg-custom-blue text-white font-semibold'>
+                        Browse Products
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
   return (
     <div className='py-14 min-h-[calc(100vh-100px)]'>
@@ -60,29 +156,32 @@ const Checkout = () => {
             ))}
         </Stepper>
 
-        {isLoading ? (
-            <div className='lg:w-[80%] mx-auto py-5'>
-                <Skeleton />
-            </div>
-        ) : (
-            <div className='mt-5'>
-                {activeStep === 0 && <AddressInfo address={address} />}
-                {activeStep === 1 && <PaymentMethod />}
+        <div className='mt-5'>
+                {activeStep === 0 && (
+                    <div className='max-w-2xl mx-auto p-5 bg-white shadow-md rounded-lg border'>
+                        <h1 className='text-2xl font-semibold mb-4'>Shipping Address</h1>
+                        <div className='grid sm:grid-cols-2 grid-cols-1 gap-4'>
+                            <input name='buildingName' value={address.buildingName} onChange={onAddressChange} placeholder='Building Name' className='border rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500' />
+                            <input name='street' value={address.street} onChange={onAddressChange} placeholder='Street' className='border rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500' />
+                            <input name='city' value={address.city} onChange={onAddressChange} placeholder='City' className='border rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500' />
+                            <input name='state' value={address.state} onChange={onAddressChange} placeholder='State' className='border rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500' />
+                            <input name='pincode' value={address.pincode} onChange={onAddressChange} placeholder='Pincode' className='border rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500' />
+                            <input name='country' value={address.country} onChange={onAddressChange} placeholder='Country' className='border rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500' />
+                        </div>
+                    </div>
+                )}
+                {activeStep === 1 && (
+                    <PaymentMethod
+                        paymentMethod={paymentMethod}
+                        onChange={setPaymentMethod}
+                    />
+                )}
                 {activeStep === 2 && <OrderSummary 
                                         totalPrice={totalPrice}
                                         cart={cart}
-                                        address={selectedUserCheckoutAddress}
+                                        address={address}
                                         paymentMethod={paymentMethod}/>}
-                {activeStep === 3 && 
-                    <>
-                        {paymentMethod === "Stripe" ? (
-                            <StripePayment />
-                        ) : (
-                            <PaypalPayment />
-                        )}
-                    </>}
             </div>
-        )}
         
 
         <div
@@ -95,20 +194,17 @@ const Checkout = () => {
                     Back
             </Button>
 
-            {activeStep !== steps.length - 1 && (
+            {activeStep !== steps.length - 1 ? (
                 <button
                     disabled={
-                        errorMessage || (
-                            (activeStep === 0 ? !selectedUserCheckoutAddress
-                                : activeStep === 1 ? !paymentMethod
-                                : false
-                            )
+                        (activeStep === 0 ? !hasAddress
+                            : activeStep === 1 ? !paymentMethod
+                            : false
                         )
                     }
                     className={`bg-custom-blue font-semibold px-6 h-10 rounded-md text-white
                        ${
-                        errorMessage ||
-                        (activeStep === 0 && !selectedUserCheckoutAddress) ||
+                        (activeStep === 0 && !hasAddress) ||
                         (activeStep === 1 && !paymentMethod)
                         ? "opacity-60"
                         : ""
@@ -116,10 +212,16 @@ const Checkout = () => {
                        onClick={handleNext}>
                     Proceed
                 </button>
+            ) : (
+                <button
+                    disabled={isPlacingOrder}
+                    className='bg-custom-blue font-semibold px-6 h-10 rounded-md text-white disabled:opacity-60'
+                    onClick={placeOrderHandler}>
+                    {isPlacingOrder ? 'Placing...' : 'Place Order'}
+                </button>
             )} 
         </div>
-        
-        {errorMessage && <ErrorPage message={errorMessage} />}
+
     </div>
   );
 }

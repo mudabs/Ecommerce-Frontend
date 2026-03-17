@@ -15,6 +15,10 @@ const PaymentForm = ({ clientSecret, totalPrice }) => {
         }
 
         const { error: submitError } = await elements.submit();
+        if (submitError) {
+            setErrorMessage(submitError.message || "Unable to submit payment details.");
+            return;
+        }
 
         const { error } = await stripe.confirmPayment({
             elements,

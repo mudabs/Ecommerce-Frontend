@@ -9,6 +9,8 @@ import Navbar from './components/shared/Navbar'
 import Cart from './components/cart/Cart'
 import LogIn from './components/auth/LogIn'
 import Register from './components/auth/Register'
+import Checkout from './components/checkout/Checkout'
+import PaymentConfirmation from './components/checkout/PaymentConfirmation'
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-confirm" element={<PaymentConfirmation />} />
         <Route path="/login" element={<LogIn />} />
         <Route path="/register" element={<Register />} />
       </Routes>

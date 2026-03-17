@@ -1,4 +1,4 @@
-import { Alert, AlertTitle, Skeleton } from '@mui/material'
+import { Skeleton } from '@mui/material'
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import React, { useEffect } from 'react'
@@ -12,11 +12,11 @@ const StripePayment = () => {
   const dispatch = useDispatch();
   const { clientSecret } = useSelector((state) => state.auth);
   const { totalPrice } = useSelector((state) => state.carts);
-  const { isLoading, errorMessage } = useSelector((state) => state.errors);
+  const { isLoading } = useSelector((state) => state.errors);
   const { user, selectedUserCheckoutAddress } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (!clientSecret) {
+    if (!clientSecret && user && selectedUserCheckoutAddress) {
     const sendData = {
       amount: Number(totalPrice) * 100,
       currency: "usd",
@@ -30,7 +30,7 @@ const StripePayment = () => {
     };
       dispatch(createStripePaymentSecret(sendData));
     }
-  }, [clientSecret]);
+  }, [clientSecret, dispatch, selectedUserCheckoutAddress, totalPrice, user]);
 
   if (isLoading) {
     return (

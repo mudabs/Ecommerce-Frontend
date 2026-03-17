@@ -91,6 +91,20 @@ The project uses a custom theme configuration with:
 3. **Configure environment variables**
    Create a `.env` file in the root directory and add necessary API endpoints and configuration.
 
+   You can copy the template and fill your own values:
+   ```bash
+   cp .env.example .env
+   ```
+
+   Required checkout/API values:
+   - `VITE_FRONTEND_URL` (example: `http://localhost:5174`)
+   - `VITE_API_BASE_URL` (example: `/api` with Vite proxy, or direct backend like `http://localhost:5000/api`)
+   - `VITE_ORDER_CREATE_PATH` (example: `/orders`)
+   - `VITE_ORDER_CURRENCY` (example: `USD`)
+
+   Optional payment value:
+   - `VITE_STRIPE_PUBLISHABLE_KEY` (only needed if Stripe components are enabled)
+
 ### Development
 
 Start the development server:

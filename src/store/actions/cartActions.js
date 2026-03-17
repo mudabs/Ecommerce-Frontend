@@ -1,3 +1,5 @@
+import toast from 'react-hot-toast';
+
 const CART_STORAGE_KEY = 'smartcart_cart_items';
 
 const persistCart = (cartItems) => {
@@ -35,6 +37,7 @@ export const addToCart = (product, quantity = 1) => (dispatch, getState) => {
                 ? { ...item, quantity: mergedQuantity, stockQuantity: maxQuantity }
                 : item
         );
+        toast.success(`${product.productName || 'Item'} quantity updated in cart`);
     } else {
         const nextItem = {
             ...product,
@@ -42,6 +45,7 @@ export const addToCart = (product, quantity = 1) => (dispatch, getState) => {
             stockQuantity,
         };
         nextCart = [...existingCart, nextItem];
+        toast.success(`${product.productName || 'Item'} added to cart`);
     }
 
     persistCart(nextCart);
@@ -87,10 +91,15 @@ export const decrementCartQuantity = (productId) => (dispatch, getState) => {
 
 export const removeFromCart = (productId) => (dispatch, getState) => {
     const existingCart = getState().carts?.cart || [];
+    const removedItem = existingCart.find((item) => item.productId === productId);
     const nextCart = existingCart.filter((item) => item.productId !== productId);
 
     persistCart(nextCart);
     dispatch({ type: 'CART_SET_ITEMS', payload: nextCart });
+
+    if (removedItem) {
+        toast.success(`${removedItem.productName || 'Item'} removed from cart`);
+    }
 };
 
 export const clearCart = () => (dispatch) => {

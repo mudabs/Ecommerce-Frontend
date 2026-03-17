@@ -106,6 +106,7 @@ The project uses a custom theme configuration with:
    - `VITE_STRIPE_PUBLISHABLE_KEY` (only needed if Stripe components are enabled)
    - `VITE_STRIPE_INTENT_PATH` (backend endpoint path for Stripe payment intent creation)
    - `VITE_PAYPAL_CLIENT_ID` (required for PayPal Smart Buttons)
+   - `VITE_BYPASS_CHECKOUT_PAYMENT` (`true` to bypass payment providers for local checkout testing)
 
 ### Development
 

@@ -26,6 +26,13 @@ const Checkout = () => {
     const navigate = useNavigate();
     const { cart } = useSelector((state) => state.carts);
     const { isAuthenticated } = useSelector((state) => state.auth);
+    const paymentBypassEnabled = String(import.meta.env.VITE_BYPASS_CHECKOUT_PAYMENT || 'false') === 'true';
+    const hasStripeKey = Boolean(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+    const hasPaypalKey = Boolean(import.meta.env.VITE_PAYPAL_CLIENT_ID);
+    const autoBypassBecauseMissingKey =
+        (paymentMethod === 'Stripe' && !hasStripeKey) ||
+        (paymentMethod === 'Paypal' && !hasPaypalKey);
+    const bypassModeActive = paymentBypassEnabled || autoBypassBecauseMissingKey;
 
     const totalPrice = useMemo(
         () => cart?.reduce(
@@ -187,7 +194,30 @@ const Checkout = () => {
                                         address={address}
                                         paymentMethod={paymentMethod}/>}
                 {activeStep === 3 && (
-                    paymentMethod === 'Stripe' ? (
+                    bypassModeActive ? (
+                        <div className='max-w-xl mx-auto p-6 bg-white border rounded-lg shadow-sm'>
+                            <h2 className='text-xl font-semibold mb-2 text-slate-900'>Test Checkout Mode</h2>
+                            <p className='text-slate-600 mb-4'>
+                                Payment is bypassed so you can continue testing checkout, order creation, and cart clearing.
+                                {autoBypassBecauseMissingKey && (
+                                    <span className='block mt-2 text-amber-700 font-medium'>
+                                        {paymentMethod} key is missing, so bypass mode was enabled automatically.
+                                    </span>
+                                )}
+                            </p>
+                            <button
+                                type='button'
+                                onClick={() => placeOrderHandler({
+                                    provider: 'BYPASS',
+                                    id: `bypass_${Date.now()}`,
+                                    status: 'SUCCEEDED',
+                                    details: { message: 'Payment bypass enabled for testing.' },
+                                })}
+                                className='bg-custom-blue text-white font-semibold px-6 py-2.5 rounded-md hover:opacity-90 transition-opacity'>
+                                Complete Test Checkout
+                            </button>
+                        </div>
+                    ) : paymentMethod === 'Stripe' ? (
                         <StripePayment
                             totalPrice={totalPrice}
                             address={address}

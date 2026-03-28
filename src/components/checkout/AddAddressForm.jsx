@@ -7,6 +7,29 @@ import Spinners from '../shared/Spinners';
 import toast from 'react-hot-toast';
 import { addUpdateUserAddress } from '../../store/actions';
 
+const COUNTRIES = [
+    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia",
+    "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Belarus", "Belgium", "Belize",
+    "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei",
+    "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Chad", "Chile",
+    "China", "Colombia", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+    "Denmark", "Djibouti", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Estonia",
+    "Ethiopia", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece",
+    "Guatemala", "Guinea", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran",
+    "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya",
+    "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Liberia", "Libya", "Liechtenstein",
+    "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
+    "Mexico", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
+    "Namibia", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Norway",
+    "Oman", "Pakistan", "Palestine", "Panama", "Paraguay", "Peru", "Philippines", "Poland",
+    "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saudi Arabia", "Senegal", "Serbia",
+    "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Somalia", "South Africa", "South Korea",
+    "South Sudan", "Spain", "Sri Lanka", "Sudan", "Sweden", "Switzerland", "Syria", "Taiwan",
+    "Tajikistan", "Tanzania", "Thailand", "Togo", "Tunisia", "Turkey", "Turkmenistan", "Uganda",
+    "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
+    "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
+];
+
 const AddAddressForm = ({ address, setOpenAddressModal }) => {
     const dispatch = useDispatch();
     const { btnLoader } = useSelector((state) => state.errors);
@@ -124,19 +147,24 @@ const AddAddressForm = ({ address, setOpenAddressModal }) => {
                     errors={errors}
                     />   
 
-                <InputField
-                    label="Country"
-                    required
-                    id="country"
-                    type="text"
-                    message="*Country is required"
-                    min={2}
-                    minMessage="Country name must be atleast 2 characters"
-                    trimRequired
-                    placeholder="Enter Country"
-                    register={register}
-                    errors={errors}
-                    />        
+                <div className="flex flex-col gap-1">
+                    <label htmlFor="country" className="text-sm font-medium text-slate-700">
+                        Country <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="country"
+                        className={`border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-custom-blue ${errors.country ? 'border-red-500' : 'border-slate-300'}`}
+                        {...register("country", { required: "*Country is required" })}
+                    >
+                        <option value="">-- Select Country --</option>
+                        {COUNTRIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
+                    {errors.country && (
+                        <span className="text-red-500 text-xs">{errors.country.message}</span>
+                    )}
+                </div>
             </div>
 
             <button

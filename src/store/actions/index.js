@@ -5,6 +5,24 @@ const buildUrlWithQuery = (path, queryString) => {
     return safeQuery ? `${path}?${safeQuery}` : path;
 };
 
+const tryGetWithFallbackEndpoints = async (endpoints, config) => {
+    let lastError;
+
+    for (const endpoint of endpoints) {
+        try {
+            return await api.get(endpoint, config);
+        } catch (error) {
+            lastError = error;
+            const status = error?.response?.status;
+            if (status !== 404 && status !== 405) {
+                throw error;
+            }
+        }
+    }
+
+    throw lastError;
+};
+
 const tryPostWithFallbackEndpoints = async (endpoints, payload) => {
     let lastError;
 
@@ -1267,19 +1285,49 @@ export const getUserOrders = (queryString = "") => async (dispatch, getState) =>
         if (!config) {
             throw new Error("Authentication required");
         }
-        
-        const { data } = await api.get(buildUrlWithQuery("/order/users/orders", queryString), config);
+
+        const userOrderEndpoints = [
+            "/order/users/orders",
+            "/orders/users",
+            "/users/orders",
+            "/user/orders",
+            "/order/user/orders",
+        ].map((endpoint) => buildUrlWithQuery(endpoint, queryString));
+
+        const { data } = await tryGetWithFallbackEndpoints(userOrderEndpoints, config);
+        const orders = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.content)
+                ? data.content
+                : Array.isArray(data?.orders)
+                    ? data.orders
+                    : Array.isArray(data?.data)
+                        ? data.data
+                        : [];
+
+        const totalElements = typeof data?.totalElements === "number"
+            ? data.totalElements
+            : orders.length;
+
+        const pageSize = typeof data?.pageSize === "number"
+            ? data.pageSize
+            : orders.length;
+
+        const totalPages = typeof data?.totalPages === "number"
+            ? data.totalPages
+            : (orders.length > 0 ? 1 : 0);
+
         dispatch({
             type: "FETCH_USER_ORDERS",
-            payload: data.content,
-            pageNumber: data.pageNumber,
-            pageSize: data.pageSize,
-            totalElements: data.totalElements,
-            totalPages: data.totalPages,
-            lastPage: data.lastPage,
+            payload: orders,
+            pageNumber: typeof data?.pageNumber === "number" ? data.pageNumber : 0,
+            pageSize,
+            totalElements,
+            totalPages,
+            lastPage: typeof data?.lastPage === "boolean" ? data.lastPage : true,
         });
         dispatch({ type: "IS_SUCCESS" });
-        return data;
+        return { ...data, content: orders, totalElements, pageSize, totalPages };
     } catch (error) {
         console.log("Failed to fetch user orders:", error);
         const message = extractApiErrorMessage(error, "Failed to fetch orders");

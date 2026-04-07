@@ -16,7 +16,7 @@ const UserOrders = () => {
     const [currentPage, setCurrentPage] = useState(0);
 
     const { userOrders, userPagination } = useSelector(state => state.order);
-    const { error } = useSelector(state => state.errors || {});
+    const { errorMessage } = useSelector(state => state.errors || {});
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -140,7 +140,7 @@ const UserOrders = () => {
                             <strong>Debug Info:</strong>
                             <br />Loading: {loading ? 'true' : 'false'}
                             <br />UserOrders: {userOrders ? `Array with ${userOrders.length} items` : 'null/undefined'}
-                            <br />Error: {error || 'none'}
+                            <br />Error: {errorMessage || 'none'}
                             <br />IsAuthenticated: {isAuthenticated ? 'true' : 'false'}
                         </div>
                     )}
@@ -170,7 +170,7 @@ const UserOrders = () => {
                                             <div>
                                                 <span className="text-gray-500">Ship to</span>
                                                 <p className="font-medium text-gray-900">
-                                                    {order.address?.city || 'N/A'}
+                                                    {order.address?.city || order.email || 'N/A'}
                                                 </p>
                                             </div>
                                             <div>
@@ -199,7 +199,7 @@ const UserOrders = () => {
                                     <div className="space-y-4">
                                         {order.orderItems && order.orderItems.map((item, index) => (
                                             <div key={index} className="flex items-start space-x-4 pb-4 border-b border-gray-100 last:border-b-0">
-                                                <div className="flex-shrink-0">
+                                                <div className="shrink-0">
                                                     <img
                                                         src={getBackendImageUrl(item.product?.image)}
                                                         alt={item.product?.productName || 'Product'}
@@ -275,7 +275,7 @@ const UserOrders = () => {
                         </div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
                         <p className="text-gray-600 mb-6">
-                            {error ? 'There was an error loading your orders.' : "You haven't placed any orders yet."}
+                            {errorMessage ? 'There was an error loading your orders.' : "You haven't placed any orders yet."}
                         </p>
                         <div className="space-x-3">
                             <button
@@ -284,7 +284,7 @@ const UserOrders = () => {
                             >
                                 Start shopping
                             </button>
-                            {error && (
+                            {errorMessage && (
                                 <button
                                     onClick={() => fetchOrders()}
                                     className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium rounded-md transition-colors"
@@ -347,7 +347,7 @@ const UserOrders = () => {
                                                 onClick={() => setCurrentPage(pageNum)}
                                                 className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                                                     pageNum === currentPage
-                                                        ? 'z-10 bg-orange-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
+                                                        ? 'z-10 bg-orange-600 text-white focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600'
                                                         : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                                                 }`}
                                             >
@@ -372,9 +372,9 @@ const UserOrders = () => {
                     </div>
                 )}
 
-                {error && (
+                {errorMessage && (
                     <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                        {error}
+                        {errorMessage}
                     </div>
                 )}
             </div>

@@ -125,21 +125,14 @@ const UserPayments = () => {
                 isDefault: card.id === cardId,
             }))
         );
-        handleSelectMethod('Stripe');
     };
 
     const handleRemoveCard = (cardId) => {
         setSavedCards((currentCards) => {
             const updatedCards = currentCards.filter((card) => card.id !== cardId);
 
-            if (updatedCards.length === 0) {
-                dispatch(removePaymentMethod());
-                return [];
-            }
-
             if (!updatedCards.some((card) => card.isDefault)) {
                 updatedCards[0] = { ...updatedCards[0], isDefault: true };
-                handleSelectMethod(updatedCards[0].provider);
             }
 
             return updatedCards;
@@ -160,7 +153,6 @@ const UserPayments = () => {
 
     const handleResetMockCards = () => {
         setSavedCards(mockSavedCards);
-        handleSelectMethod('Stripe');
     };
 
     const defaultCard = savedCards.find((card) => card.isDefault) || null;

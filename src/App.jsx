@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import './App.css'
 import Products from './components/products/Products'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Home from './components/home/Home'
 import Navbar from './components/shared/Navbar'
 import About from './components/About'
@@ -22,6 +22,8 @@ import Orders from './components/admin/orders/Orders'
 import ProfileLayout from './components/user/ProfileLayout'
 import UserOrders from './components/user/UserOrders'
 import Account from './components/user/Account'
+import UserAddresses from './components/user/UserAddresses'
+import UserPayments from './components/user/UserPayments'
 import RouteTest from './components/RouteTest'
 //import AuthDebugger from './components/AuthDebugger'
 
@@ -45,9 +47,12 @@ function App() {
 
           {/* User Profile Routes */}
           <Route path='/profile' element={<PrivateRoute />}>
-            <Route path='' element={ <ProfileLayout />}>
+            <Route element={ <ProfileLayout />}>
+              <Route index element={<Navigate to='orders' replace />} />
               <Route path='orders' element={ <UserOrders />} />
               <Route path='account' element={ <Account />} />
+              <Route path='addresses' element={ <UserAddresses />} />
+              <Route path='payments' element={ <UserPayments />} />
             </Route>
           </Route>
 

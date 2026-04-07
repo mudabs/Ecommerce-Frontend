@@ -25,9 +25,14 @@ const selectUserCheckoutAddress = localStorage.getItem("CHECKOUT_ADDRESS")
     ? JSON.parse(localStorage.getItem("CHECKOUT_ADDRESS"))
     : [];
 
+const storedPaymentMethod = localStorage.getItem("PAYMENT_METHOD")
+    ? JSON.parse(localStorage.getItem("PAYMENT_METHOD"))
+    : null;
+
 const initialState = {
     auth: { user: user, selectedUserCheckoutAddress: selectUserCheckoutAddress },
     carts: { cart: cartItems, totalPrice: computedTotalPrice },
+    payment: { paymentMethod: storedPaymentMethod },
 };
 
 export const store = configureStore({

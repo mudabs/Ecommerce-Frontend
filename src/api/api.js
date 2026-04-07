@@ -117,6 +117,8 @@ function handleAuthFailure() {
     localStorage.removeItem("auth");
     localStorage.removeItem("cartItems");
     localStorage.removeItem("CHECKOUT_ADDRESS");
+    localStorage.removeItem("PAYMENT_METHOD");
+    localStorage.removeItem("SAVED_PAYMENT_METHODS");
     
     // Only redirect if not already on auth pages
     const currentPath = window.location.pathname;

@@ -30,6 +30,9 @@ const PaymentMethod = () => {
   return (
     <div className='max-w-md mx-auto p-5 bg-white shadow-md rounded-lg mt-16 border'>
         <h1 className='text-2xl font-semibold mb-4'>Select Payment Method</h1>
+        <p className='mb-4 text-sm text-slate-600'>
+            Stripe is currently the available online payment provider for checkout.
+        </p>
         <FormControl>
             <RadioGroup
                 aria-label="payment method"
@@ -46,7 +49,8 @@ const PaymentMethod = () => {
                 <FormControlLabel 
                     value="Paypal" 
                     control={<Radio color='primary' />} 
-                    label="Paypal" 
+                                        label="Paypal (coming soon)" 
+                                        disabled
                     className='text-gray-700'/>
             </RadioGroup>
         </FormControl>

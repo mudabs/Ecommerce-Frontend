@@ -42,6 +42,28 @@ const extractApiErrorMessage = (error, fallbackMessage) => {
         return data;
     }
 
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+        const firstError = data.errors[0];
+        if (typeof firstError === "string") {
+            return firstError;
+        }
+
+        if (typeof firstError?.defaultMessage === "string") {
+            return firstError.defaultMessage;
+        }
+
+        if (typeof firstError?.message === "string") {
+            return firstError.message;
+        }
+    }
+
+    if (data?.errors && typeof data.errors === "object") {
+        const firstValue = Object.values(data.errors)[0];
+        if (typeof firstValue === "string") {
+            return firstValue;
+        }
+    }
+
     return (
         data?.message ||
         data?.error ||
@@ -67,12 +89,30 @@ const normalizeAddressPayload = (sendData = {}) => {
 
 const getAddressPayloadCandidates = (sendData) => {
     const normalizedPayload = normalizeAddressPayload(sendData);
+    const alternateNamesPayload = {
+        ...normalizedPayload,
+        name: normalizedPayload.buildingName,
+        addressLine1: normalizedPayload.street,
+        addressLine2: normalizedPayload.buildingName,
+        postalCode: normalizedPayload.pincode,
+        zipCode: normalizedPayload.pincode,
+        zipcode: normalizedPayload.pincode,
+    };
 
     return [
         normalizedPayload,
         {
             ...normalizedPayload,
             zipCode: normalizedPayload.pincode,
+            pincode: undefined,
+        },
+        {
+            ...normalizedPayload,
+            postalCode: normalizedPayload.pincode,
+            pincode: undefined,
+        },
+        {
+            ...alternateNamesPayload,
             pincode: undefined,
         },
     ];
@@ -372,6 +412,8 @@ export const registerNewUser
 export const logOutUser = (navigate) => (dispatch) => {
     dispatch({ type:"LOG_OUT" });
     localStorage.removeItem("auth");
+    localStorage.removeItem("PAYMENT_METHOD");
+    localStorage.removeItem("SAVED_PAYMENT_METHODS");
     navigate("/login");
 };
 
@@ -493,10 +535,20 @@ export const selectUserCheckoutAddress = (address) => {
 
 
 export const addPaymentMethod = (method) => {
+    localStorage.setItem("PAYMENT_METHOD", JSON.stringify(method));
+
     return {
         type: "ADD_PAYMENT_METHOD",
         payload: method,
     }
+};
+
+export const removePaymentMethod = () => {
+    localStorage.removeItem("PAYMENT_METHOD");
+
+    return {
+        type: "REMOVE_PAYMENT_METHOD",
+    };
 };
 
 
@@ -1093,6 +1145,8 @@ export const logoutUser = (navigate, toast) => async (dispatch) => {
         localStorage.removeItem("auth");
         localStorage.removeItem("cartItems");
         localStorage.removeItem("CHECKOUT_ADDRESS");
+        localStorage.removeItem("PAYMENT_METHOD");
+        localStorage.removeItem("SAVED_PAYMENT_METHODS");
         
         dispatch({ type: "LOG_OUT" });
         toast.success("Logged out successfully!");
@@ -1102,6 +1156,8 @@ export const logoutUser = (navigate, toast) => async (dispatch) => {
         localStorage.removeItem("auth");
         localStorage.removeItem("cartItems");
         localStorage.removeItem("CHECKOUT_ADDRESS");
+        localStorage.removeItem("PAYMENT_METHOD");
+        localStorage.removeItem("SAVED_PAYMENT_METHODS");
         dispatch({ type: "LOG_OUT" });
         navigate("/login");
     }

@@ -1,28 +1,11 @@
 import { FormControl, FormControlLabel, Radio, RadioGroup } from '@mui/material'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addPaymentMethod, createUserCart } from '../../store/actions';
+import { addPaymentMethod } from '../../store/actions';
 
 const PaymentMethod = () => {
     const dispatch = useDispatch();
     const { paymentMethod } = useSelector((state) => state.payment);
-    const { cart, cartId } = useSelector((state) => state.carts);
-    const { isLoading, errorMessage } = useSelector((state) => state.errors);
-
-    useEffect(() => {
-        // If backend cartId is missing, keep trying to sync from localStorage.
-        // The cart-sync action itself handles duplicate errors gracefully.
-        if (cart.length > 0 && !cartId) {
-            const sendCartItems = cart.map((item) => {
-                return {
-                    productId: item.productId,
-                    quantity: item.quantity,
-                };
-            });
-            
-            dispatch(createUserCart(sendCartItems));
-        }
-    }, [dispatch, cart, cartId]);
 
     const paymentMethodHandler = (method) => {
         dispatch(addPaymentMethod(method));

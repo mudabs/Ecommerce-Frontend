@@ -240,6 +240,61 @@ const getAuthRequestConfig = (getState) => {
     };
 };
 
+const getGuestCartItems = () => {
+    try {
+        const raw = localStorage.getItem("cartItems");
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+};
+
+const setGuestCartItems = (cartItems) => {
+    localStorage.setItem("cartItems", JSON.stringify(Array.isArray(cartItems) ? cartItems : []));
+};
+
+const clearGuestCartItems = () => {
+    localStorage.removeItem("cartItems");
+};
+
+const isAuthenticatedCartSession = (getState) => Boolean(getAuthRequestConfig(getState));
+
+const applyCartResponse = (dispatch, cartData, persistAsGuest = false) => {
+    const cartItems = Array.isArray(cartData?.products) ? cartData.products : [];
+    dispatch({
+        type: "GET_USER_CART_PRODUCTS",
+        payload: cartItems,
+        totalPrice: Number(cartData?.totalPrice || 0),
+        cartId: cartData?.cartId || null,
+    });
+
+    if (persistAsGuest) {
+        setGuestCartItems(cartItems);
+    } else {
+        clearGuestCartItems();
+    }
+};
+
+const normalizeCartItemsForSync = (cartItems) => {
+    const normalizedItems = (Array.isArray(cartItems) ? cartItems : [])
+        .map((item) => ({
+            productId: item?.productId ?? item?.id,
+            quantity: Number(item?.quantity || 0),
+        }))
+        .filter((item) => item.productId != null && item.quantity > 0);
+
+    const dedupedByProductId = normalizedItems.reduce((acc, item) => {
+        const key = String(item.productId);
+        acc[key] = Math.min((acc[key] ?? 0) + item.quantity, 25);
+        return acc;
+    }, {});
+
+    return Object.entries(dedupedByProductId).map(([productId, quantity]) => ({
+        productId: Number(productId),
+        quantity,
+    }));
+};
+
 export const fetchProducts = (queryString) => async (dispatch) => {
     try {
         dispatch({ type: "IS_FETCHING" });
@@ -289,23 +344,32 @@ export const fetchCategories = () => async (dispatch) => {
 
 
 export const addToCart = (data, qty = 1, toast) => 
-    (dispatch, getState) => {
-        // Find the product
-        const { products } = getState().products;
-        const getProduct = products.find(
-            (item) => item.productId === data.productId
-        );
+    async (dispatch, getState) => {
+        if (isAuthenticatedCartSession(getState)) {
+            try {
+                const requestConfig = getAuthRequestConfig(getState);
+                const { data: cartData } = await api.post(
+                    `/carts/products/${data.productId}/quantity/${qty}`,
+                    null,
+                    requestConfig
+                );
+                applyCartResponse(dispatch, cartData);
+                toast.success(`${data?.productName} added to the cart`);
+            } catch (error) {
+                toast.error(extractApiErrorMessage(error, "Failed to add item to cart"));
+            }
+            return;
+        }
 
-        // Check for stocks
-        const isQuantityExist = getProduct.quantity >= qty;
+        const { products = [] } = getState().products;
+        const currentProduct = products.find((item) => item.productId === data.productId) || data;
+        const isQuantityExist = Number(currentProduct?.quantity || 0) >= qty;
 
-        // If in stock -> add
         if (isQuantityExist) {
             dispatch({ type: "ADD_CART", payload: {...data, quantity: qty}});
             toast.success(`${data?.productName} added to the cart`);
-            localStorage.setItem("cartItems", JSON.stringify(getState().carts.cart));
+            setGuestCartItems(getState().carts.cart);
         } else {
-            // error
             toast.error("Out of stock");
         }
 };
@@ -313,15 +377,29 @@ export const addToCart = (data, qty = 1, toast) =>
 
 export const increaseCartQuantity = 
     (data, toast, currentQuantity, setCurrentQuantity) =>
-    (dispatch, getState) => {
-        // Find the product
-        const { products } = getState().products;
-        
-        const getProduct = products.find(
-            (item) => item.productId === data.productId
-        );
+    async (dispatch, getState) => {
+        if (isAuthenticatedCartSession(getState)) {
+            try {
+                const requestConfig = getAuthRequestConfig(getState);
+                const { data: cartData } = await api.put(
+                    `/cart/products/${data.productId}/quantity/increase`,
+                    null,
+                    requestConfig
+                );
+                applyCartResponse(dispatch, cartData);
+                setCurrentQuantity((prev) => prev + 1);
+            } catch (error) {
+                toast.error(extractApiErrorMessage(error, "Failed to update cart quantity"));
+            }
+            return;
+        }
 
-        const isQuantityExist = getProduct.quantity >= currentQuantity + 1;
+        const { products = [] } = getState().products;
+        const currentProduct = products.find(
+            (item) => item.productId === data.productId
+        ) || data;
+
+        const isQuantityExist = Number(currentProduct?.quantity || 0) >= currentQuantity + 1;
 
         if (isQuantityExist) {
             const newQuantity = currentQuantity + 1;
@@ -329,9 +407,9 @@ export const increaseCartQuantity =
 
             dispatch({
                 type: "ADD_CART",
-                payload: {...data, quantity: newQuantity + 1 },
+                payload: {...data, quantity: newQuantity },
             });
-            localStorage.setItem("cartItems", JSON.stringify(getState().carts.cart));
+            setGuestCartItems(getState().carts.cart);
         } else {
             toast.error("Quantity Reached to Limit");
         }
@@ -341,18 +419,45 @@ export const increaseCartQuantity =
 
 
 export const decreaseCartQuantity = 
-    (data, newQuantity) => (dispatch, getState) => {
+    (data, newQuantity) => async (dispatch, getState) => {
+        if (isAuthenticatedCartSession(getState)) {
+            try {
+                const requestConfig = getAuthRequestConfig(getState);
+                const { data: cartData } = await api.put(
+                    `/cart/products/${data.productId}/quantity/delete`,
+                    null,
+                    requestConfig
+                );
+                applyCartResponse(dispatch, cartData);
+            } catch (error) {
+                console.log(error);
+            }
+            return;
+        }
+
         dispatch({
             type: "ADD_CART",
             payload: {...data, quantity: newQuantity},
         });
-        localStorage.setItem("cartItems", JSON.stringify(getState().carts.cart));
+        setGuestCartItems(getState().carts.cart);
     }
 
-export const removeFromCart =  (data, toast) => (dispatch, getState) => {
+export const removeFromCart =  (data, toast) => async (dispatch, getState) => {
+    if (isAuthenticatedCartSession(getState)) {
+        try {
+            const requestConfig = getAuthRequestConfig(getState);
+            await api.delete(`/carts/users/cart/product/${data.productId}`, requestConfig);
+            await dispatch(getUserCart());
+            toast.success(`${data.productName} removed from cart`);
+        } catch (error) {
+            toast.error(extractApiErrorMessage(error, "Failed to remove item from cart"));
+        }
+        return;
+    }
+
     dispatch({type: "REMOVE_CART", payload: data });
     toast.success(`${data.productName} removed from cart`);
-    localStorage.setItem("cartItems", JSON.stringify(getState().carts.cart));
+    setGuestCartItems(getState().carts.cart);
 }
 
 
@@ -390,6 +495,7 @@ export const authenticateSignInUser
             const { data } = response;
             dispatch({ type: "LOGIN_USER", payload: data });
             localStorage.setItem("auth", JSON.stringify(data));
+            await dispatch(syncUserCart(getGuestCartItems()));
             reset();
             toast.success("Login Success");
             navigate("/");
@@ -429,7 +535,9 @@ export const registerNewUser
 
 export const logOutUser = (navigate) => (dispatch) => {
     dispatch({ type:"LOG_OUT" });
+    dispatch({ type: "CLEAR_CART" });
     localStorage.removeItem("auth");
+    localStorage.removeItem("cartItems");
     localStorage.removeItem("PAYMENT_METHOD");
     localStorage.removeItem("SAVED_PAYMENT_METHODS");
     navigate("/login");
@@ -582,85 +690,7 @@ export const removePaymentMethod = () => {
 
 export const createUserCart = (sendCartItems) => async (dispatch, getState) => {
     try {
-        dispatch({ type: "IS_FETCHING" });
-        const requestConfig = getAuthRequestConfig(getState);
-        if (!requestConfig) {
-            dispatch({
-                type: "IS_ERROR",
-                payload: "Please login again to sync your cart.",
-            });
-            return;
-        }
-
-        // Normalize + dedupe by productId so we don't try adding the same product twice.
-        // Note: we do NOT call getUserCart() first because it can overwrite the local cart with
-        // an empty backend response before items are synced. The 400 handler below already
-        // gracefully skips items that already exist in the backend cart.
-        const normalizedCartItems = (Array.isArray(sendCartItems) ? sendCartItems : [])
-            .map((item) => ({
-                productId: item?.productId ?? item?.id,
-                quantity: Number(item?.quantity || 0),
-            }))
-            .filter((item) => item.productId != null && item.quantity > 0);
-
-        const dedupedByProductId = normalizedCartItems.reduce((acc, item) => {
-            const key = String(item.productId);
-            acc[key] = (acc[key] ?? 0) + item.quantity;
-            return acc;
-        }, {});
-
-        const itemsToCreate = Object.entries(dedupedByProductId).map(([productId, qty]) => ({
-            productId,
-            quantity: qty,
-        }));
-
-        if (itemsToCreate.length === 0) {
-            dispatch({ type: "IS_SUCCESS" });
-            return;
-        }
-
-        // Backend throws 400 if the product already exists in the user's cart.
-        // During checkout we often "sync" from localStorage, so duplicates are common.
-        let hadNon400Error = false;
-
-        for (const item of itemsToCreate) {
-            try {
-                await api.post(
-                    `/carts/products/${item.productId}/quantity/${item.quantity}`,
-                    null,
-                    requestConfig
-                );
-            } catch (error) {
-                const status =
-                    error?.response?.status ??
-                    error?.status ??
-                    error?.response?.statusCode;
-                const message = extractApiErrorMessage(error, "");
-
-                // If backend says 400, skip this item and continue syncing.
-                // This prevents checkout from blocking due to cart duplicates or stock/quantity validation.
-                const isBadRequest = status === 400;
-                const isAlreadyExists =
-                    typeof message === "string" &&
-                    message.toLowerCase().includes("already exists in the cart");
-
-                if (isBadRequest || isAlreadyExists) {
-                    continue;
-                }
-
-                hadNon400Error = true;
-                throw error;
-            }
-        }
-
-        await dispatch(getUserCart());
-
-        if (hadNon400Error) {
-            dispatch({
-                type: "IS_ERROR",
-                payload: "Failed to create cart items",
-            });
-        }
+        await dispatch(syncUserCart(sendCartItems));
     } catch (error) {
         console.log(error);
         dispatch({ 
@@ -670,21 +700,34 @@ export const createUserCart = (sendCartItems) => async (dispatch, getState) => {
     }
 };
 
+export const syncUserCart = (sendCartItems = []) => async (dispatch, getState) => {
+    const requestConfig = getAuthRequestConfig(getState);
+    if (!requestConfig) {
+        return null;
+    }
+
+    const normalizedCartItems = normalizeCartItemsForSync(sendCartItems);
+
+    if (normalizedCartItems.length === 0) {
+        await dispatch(getUserCart());
+        return null;
+    }
+
+    const { data } = await api.post("/carts/users/cart/sync", normalizedCartItems, requestConfig);
+    applyCartResponse(dispatch, data);
+    return data;
+};
+
 
 export const getUserCart = () => async (dispatch, getState) => {
     try {
-        dispatch({ type: "IS_FETCHING" });
         const requestConfig = getAuthRequestConfig(getState);
+        if (!requestConfig) {
+            return null;
+        }
         const { data } = await api.get('/carts/users/cart', requestConfig);
-        
-        dispatch({
-            type: "GET_USER_CART_PRODUCTS",
-            payload: data.products,
-            totalPrice: data.totalPrice,
-            cartId: data.cartId
-        })
-        localStorage.setItem("cartItems", JSON.stringify(getState().carts.cart));
-        dispatch({ type: "IS_SUCCESS" });
+        applyCartResponse(dispatch, data);
+        return data;
     } catch (error) {
         console.log(error);
         dispatch({ 

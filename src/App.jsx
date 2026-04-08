@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useEffect } from 'react'
 import './App.css'
 import Products from './components/products/Products'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
@@ -26,9 +27,53 @@ import Account from './components/user/Account'
 import UserAddresses from './components/user/UserAddresses'
 import UserPayments from './components/user/UserPayments'
 import RouteTest from './components/RouteTest'
+import { useDispatch, useSelector } from 'react-redux'
+import { getUserCart, syncUserCart } from './store/actions'
 //import AuthDebugger from './components/AuthDebugger'
 
 function App() {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const hydrateCart = async () => {
+      try {
+        const guestCartItems = (() => {
+          try {
+            const raw = localStorage.getItem('cartItems');
+            return raw ? JSON.parse(raw) : [];
+          } catch {
+            return [];
+          }
+        })();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (Array.isArray(guestCartItems) && guestCartItems.length > 0) {
+          await dispatch(syncUserCart(guestCartItems));
+        } else {
+          await dispatch(getUserCart());
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    hydrateCart();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, user?.email, user?.username, user?.userName]);
+
   return (
     <React.Fragment>
       <Router>

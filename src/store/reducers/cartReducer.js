@@ -4,6 +4,11 @@ const initialState = {
     cartId: null,
 }
 
+const calculateCartTotal = (cartItems = []) => cartItems.reduce(
+    (sum, item) => sum + (Number(item?.specialPrice || item?.price || 0) * Number(item?.quantity || 0)),
+    0
+);
+
 export const cartReducer = (state = initialState, action) => {
     switch (action.type) {
         case "ADD_CART":
@@ -24,20 +29,24 @@ export const cartReducer = (state = initialState, action) => {
                 return {
                     ...state,
                     cart: updatedCart,
+                    totalPrice: calculateCartTotal(updatedCart),
                 };
             } else {
                 const newCart = [...state.cart, productToAdd];
                 return {
                     ...state,
                     cart: newCart,
+                    totalPrice: calculateCartTotal(newCart),
                 };
             }
         case "REMOVE_CART":
+            const filteredCart = state.cart.filter(
+                (item) => item.productId !== action.payload.productId
+            );
             return {
                 ...state,
-                cart: state.cart.filter(
-                    (item) => item.productId !== action.payload.productId
-                ),
+                cart: filteredCart,
+                totalPrice: calculateCartTotal(filteredCart),
             };
         case "GET_USER_CART_PRODUCTS":
             return {
@@ -51,5 +60,4 @@ export const cartReducer = (state = initialState, action) => {
         default:
             return state;
     }
-    return state;
 }

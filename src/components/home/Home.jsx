@@ -87,7 +87,7 @@ const Home = () => {
                             <h2 className="text-xl font-bold text-[#0f1111] mb-3">{panel.title}</h2>
                             <div className="grid grid-cols-2 gap-2">
                                 {panel.products.slice(0, 4).map((product, index) => (
-                                    <Link key={product?.productId ?? `${panelIndex}-${index}`} to="/products" className="block">
+                                    <Link key={product?.productId ?? `${panelIndex}-${index}`} to={product?.productId ? `/products/${product.productId}` : "/products"} className="block">
                                         <div className="bg-[#f7f7f7] border border-[#efefef] p-2 h-30 flex items-center justify-center">
                                             <img
                                                 src={getBackendImageUrl(product?.image)}
@@ -156,7 +156,7 @@ const Home = () => {
 
                                 return (
                                     <div key={product?.productId ?? `deal-${index}`} className="border border-[#efefef] p-3 bg-white">
-                                        <Link to="/products" className="block">
+                                        <Link to={product?.productId ? `/products/${product.productId}` : "/products"} className="block">
                                             <div className="h-35 bg-[#f7f7f7] flex items-center justify-center">
                                                 <img
                                                     src={getBackendImageUrl(product?.image)}
@@ -200,7 +200,7 @@ const Home = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {featuredProducts.map((product, index) => (
                                 <div key={product?.productId ?? `featured-${index}`} className="border border-[#efefef] p-3">
-                                    <Link to="/products" className="block">
+                                    <Link to={product?.productId ? `/products/${product.productId}` : "/products"} className="block">
                                         <div className="h-45 bg-[#f7f7f7] flex items-center justify-center">
                                             <img
                                                 src={getBackendImageUrl(product?.image)}

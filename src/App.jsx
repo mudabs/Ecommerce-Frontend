@@ -27,6 +27,7 @@ import Account from './components/user/Account'
 import UserAddresses from './components/user/UserAddresses'
 import UserPayments from './components/user/UserPayments'
 import RouteTest from './components/RouteTest'
+import ProductDetail from './components/products/ProductDetail'
 import { useDispatch, useSelector } from 'react-redux'
 import { getUserCart, syncUserCart } from './store/actions'
 //import AuthDebugger from './components/AuthDebugger'
@@ -81,6 +82,7 @@ function App() {
         <Routes>
           <Route path='/' element={ <Home />}/>
           <Route path='/products' element={ <Products />}/>
+          <Route path='/products/:productId' element={ <ProductDetail />}/>
           <Route path='/about' element={ <About />}/>
           <Route path='/contact' element={ <Contact />}/>
           <Route path='/cart' element={ <Cart />}/>

@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../../store/actions";
 import toast from "react-hot-toast";
 import { getBackendImageUrl, handleImageLoadError } from "../../utils/env";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({
         productId,
@@ -22,11 +23,11 @@ const ProductCard = ({
     const [selectedViewProduct, setSelectedViewProduct] = useState("");
     const isAvailable = quantity && Number(quantity) > 0;
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    const handleProductView = (product) => {
-        if (!about) {
-            setSelectedViewProduct(product);
-            setOpenProductViewModal(true);
+    const handleProductView = () => {
+        if (!about && productId) {
+            navigate(`/products/${productId}`);
         }
     };
 
@@ -36,18 +37,7 @@ const ProductCard = ({
 
     return (
         <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-            <div onClick={() => {
-                handleProductView({
-                    id: productId,
-                    productName,
-                    image,
-                    description,
-                    quantity,
-                    price,
-                    discount,
-                    specialPrice,
-                })
-            }} 
+            <div onClick={handleProductView} 
                     className="w-full h-48 overflow-hidden bg-white flex items-center justify-center">
                 <img 
                 className="w-full h-full object-contain cursor-pointer transition-transform duration-300 transform hover:scale-105"
@@ -57,18 +47,7 @@ const ProductCard = ({
                 </img>
             </div>
             <div className="p-4">
-                <h2 onClick={() => {
-                handleProductView({
-                    id: productId,
-                    productName,
-                    image,
-                    description,
-                    quantity,
-                    price,
-                    discount,
-                    specialPrice,
-                })
-            }}
+                <h2 onClick={handleProductView}
                     className="text-lg font-semibold mb-2 cursor-pointer">
                     {truncateText(productName, 50)}
                 </h2>

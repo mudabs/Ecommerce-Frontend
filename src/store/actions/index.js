@@ -897,6 +897,76 @@ export const getOrdersForDashboard = (queryString, isAdmin) => async (dispatch, 
 };
 
 
+export const fetchProductById = (productId) => async (dispatch) => {
+    try {
+        dispatch({ type: "IS_FETCHING" });
+        const { data } = await api.get(`/public/products/${productId}`);
+        dispatch({ type: "FETCH_PRODUCT_BY_ID", payload: data });
+        dispatch({ type: "IS_SUCCESS" });
+    } catch (error) {
+        console.log(error);
+        dispatch({
+            type: "IS_ERROR",
+            payload: error?.response?.data?.message || "Failed to fetch product",
+        });
+    }
+};
+
+export const fetchProductReviews = (productId, page = 0) => async (dispatch) => {
+    try {
+        const { data } = await api.get(`/public/products/${productId}/reviews?pageNumber=${page}&pageSize=10`);
+        dispatch({
+            type: "FETCH_PRODUCT_REVIEWS",
+            payload: data.content,
+            averageRating: data.averageRating,
+            reviewCount: data.reviewCount,
+            pageNumber: data.pageNumber,
+            totalPages: data.totalPages,
+            lastPage: data.lastPage,
+        });
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+export const addProductReview = (productId, reviewData, toast, onSuccess) => async (dispatch, getState) => {
+    try {
+        const requestConfig = getAuthRequestConfig(getState);
+        if (!requestConfig) {
+            toast.error("Please log in to leave a review.");
+            return;
+        }
+        await api.post(`/products/${productId}/reviews`, reviewData, requestConfig);
+        toast.success("Review submitted!");
+        dispatch(fetchProductReviews(productId));
+        if (typeof onSuccess === "function") onSuccess();
+    } catch (error) {
+        toast.error(extractApiErrorMessage(error, "Failed to submit review"));
+    }
+};
+
+export const deleteProductReview = (productId, reviewId, toast) => async (dispatch, getState) => {
+    try {
+        const requestConfig = getAuthRequestConfig(getState);
+        await api.delete(`/products/${productId}/reviews/${reviewId}`, requestConfig);
+        toast.success("Review deleted.");
+        dispatch(fetchProductReviews(productId));
+    } catch (error) {
+        toast.error(extractApiErrorMessage(error, "Failed to delete review"));
+    }
+};
+
+export const fetchSimilarProducts = (category, excludeProductId) => async (dispatch) => {
+    try {
+        const { data } = await api.get(
+            buildUrlWithQuery("/public/products", `category=${encodeURIComponent(category)}&pageSize=8`)
+        );
+        const similar = (data.content || []).filter((p) => p.productId !== excludeProductId);
+        dispatch({ type: "FETCH_SIMILAR_PRODUCTS", payload: similar });
+    } catch (error) {
+        console.log(error);
+    }
+};
 
 export const updateOrderStatusFromDashboard =
      (orderId, orderStatus, toast, setLoader, isAdmin) => async (dispatch, getState) => {

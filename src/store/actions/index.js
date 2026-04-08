@@ -522,6 +522,16 @@ export const getUserAddresses = () => async (dispatch, getState) => {
         const requestConfig = getAuthRequestConfig(getState);
         const { data } = await api.get(`/users/addresses`, requestConfig);
         dispatch({type: "USER_ADDRESS", payload: data});
+        const selectedUserCheckoutAddress = getState()?.auth?.selectedUserCheckoutAddress;
+        const hasSelectedAddress = Boolean(selectedUserCheckoutAddress?.addressId);
+        const selectedAddressStillExists = hasSelectedAddress && data?.some(
+            (address) => address?.addressId === selectedUserCheckoutAddress.addressId
+        );
+
+        if (hasSelectedAddress && !selectedAddressStillExists) {
+            dispatch(clearCheckoutAddress());
+        }
+
         dispatch({ type: "IS_SUCCESS" });
     } catch (error) {
         console.log(error);

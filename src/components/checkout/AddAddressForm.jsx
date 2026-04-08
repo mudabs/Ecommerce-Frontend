@@ -126,8 +126,8 @@ const AddAddressForm = ({ address, setOpenAddressModal }) => {
                     id="pincode"
                     type="text"
                     message="*Pincode is required"
-                    min={4}
-                    minMessage="Pincode must be at least 4 characters"
+                    min={6}
+                    minMessage="Pincode must be at least 6 characters"
                     trimRequired
                     placeholder="Enter Pincode"
                     register={register}

@@ -520,7 +520,7 @@ export const getUserAddresses = () => async (dispatch, getState) => {
     try {
         dispatch({ type: "IS_FETCHING" });
         const requestConfig = getAuthRequestConfig(getState);
-        const { data } = await api.get(`/addresses`, requestConfig);
+        const { data } = await api.get(`/users/addresses`, requestConfig);
         dispatch({type: "USER_ADDRESS", payload: data});
         dispatch({ type: "IS_SUCCESS" });
     } catch (error) {
@@ -1335,6 +1335,30 @@ export const getUserOrders = (queryString = "") => async (dispatch, getState) =>
         throw error;
     }
 };
+
+export const getUserOrderById = (orderId) => async (dispatch, getState) => {
+    try {
+        dispatch({ type: "IS_FETCHING" });
+        const config = getAuthRequestConfig(getState);
+        if (!config) {
+            throw new Error("Authentication required");
+        }
+
+        const { data } = await api.get(`/order/users/orders/${orderId}`, config);
+        dispatch({ type: "FETCH_USER_ORDER_DETAIL", payload: data });
+        dispatch({ type: "IS_SUCCESS" });
+        return data;
+    } catch (error) {
+        console.log("Failed to fetch user order detail:", error);
+        const message = extractApiErrorMessage(error, "Failed to fetch order details");
+        dispatch({ type: "IS_ERROR", payload: message });
+        throw error;
+    }
+};
+
+export const clearUserOrderDetail = () => ({
+    type: "CLEAR_USER_ORDER_DETAIL",
+});
 
 export const reorderItems = (orderId, navigate, toast) => async (dispatch, getState) => {
     try {

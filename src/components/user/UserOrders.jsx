@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { getUserOrders, reorderItems } from '../../store/actions';
+import { getUserAddresses, getUserOrders, reorderItems } from '../../store/actions';
 import toast from 'react-hot-toast';
 import { formatPrice } from '../../utils';
 import { getBackendImageUrl } from '../../utils/env';
@@ -16,6 +16,7 @@ const UserOrders = () => {
     const [currentPage, setCurrentPage] = useState(0);
 
     const { userOrders, userPagination } = useSelector(state => state.order);
+    const { address } = useSelector(state => state.auth);
     const { errorMessage } = useSelector(state => state.errors || {});
 
     useEffect(() => {
@@ -25,6 +26,7 @@ const UserOrders = () => {
         }
 
         fetchOrders();
+        dispatch(getUserAddresses());
     }, [isAuthenticated, navigate, currentPage, selectedTimeFrame]);
 
     const fetchOrders = async () => {
@@ -78,6 +80,31 @@ const UserOrders = () => {
             day: 'numeric' 
         };
         return new Date(dateString).toLocaleDateString('en-US', options);
+    };
+
+    const getShippingAddress = (order) => {
+        const matchedAddress = Array.isArray(address)
+            ? address.find((item) => item.addressId === order.addressId)
+            : null;
+
+        const addressSource = order.address || matchedAddress;
+
+        if (!addressSource) {
+            return order.addressId ? `Address #${order.addressId}` : 'Address unavailable';
+        }
+
+        const compactAddress = [
+            addressSource.buildingName,
+            addressSource.street,
+            addressSource.city,
+            addressSource.state,
+            addressSource.pincode,
+            addressSource.country,
+        ]
+            .filter(Boolean)
+            .join(', ');
+
+        return compactAddress || (order.addressId ? `Address #${order.addressId}` : 'Address unavailable');
     };
 
     const timeFrameOptions = [
@@ -154,28 +181,28 @@ const UserOrders = () => {
                                 {/* Order Header */}
                                 <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 rounded-t-lg">
                                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                                            <div>
+                                        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                                            <div className="min-w-0">
                                                 <span className="text-gray-500">Order placed</span>
-                                                <p className="font-medium text-gray-900">
+                                                <p className="font-medium text-gray-900 truncate">
                                                     {formatOrderDate(order.orderDate)}
                                                 </p>
                                             </div>
-                                            <div>
+                                            <div className="min-w-0">
                                                 <span className="text-gray-500">Total</span>
-                                                <p className="font-medium text-gray-900">
+                                                <p className="font-medium text-gray-900 truncate">
                                                     {formatPrice(order.totalAmount)}
                                                 </p>
                                             </div>
-                                            <div>
+                                            <div className="min-w-0">
                                                 <span className="text-gray-500">Ship to</span>
-                                                <p className="font-medium text-gray-900">
-                                                    {order.address?.city || order.email || 'N/A'}
+                                                <p className="font-medium text-gray-900 truncate">
+                                                    {getShippingAddress(order)}
                                                 </p>
                                             </div>
-                                            <div>
+                                            <div className="min-w-0">
                                                 <span className="text-gray-500">Order #</span>
-                                                <p className="font-medium text-gray-900">
+                                                <p className="font-medium text-gray-900 truncate">
                                                     #{order.orderId}
                                                 </p>
                                             </div>

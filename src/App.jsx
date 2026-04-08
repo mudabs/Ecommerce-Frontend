@@ -21,6 +21,7 @@ import Category from './components/admin/categories/Category'
 import Orders from './components/admin/orders/Orders'
 import ProfileLayout from './components/user/ProfileLayout'
 import UserOrders from './components/user/UserOrders'
+import UserOrderDetails from './components/user/UserOrderDetails'
 import Account from './components/user/Account'
 import UserAddresses from './components/user/UserAddresses'
 import UserPayments from './components/user/UserPayments'
@@ -49,6 +50,7 @@ function App() {
           <Route path='/profile' element={<PrivateRoute />}>
             <Route element={ <ProfileLayout />}>
               <Route index element={<Navigate to='orders' replace />} />
+              <Route path='orders/:orderId' element={ <UserOrderDetails />} />
               <Route path='orders' element={ <UserOrders />} />
               <Route path='account' element={ <Account />} />
               <Route path='addresses' element={ <UserAddresses />} />

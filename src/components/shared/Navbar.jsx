@@ -22,8 +22,22 @@ const Navbar = () => {
     useEffect(() => {
         if (path === "/products") {
             setSearchValue(searchParams.get("keyword") || "");
+        } else {
+            setSearchValue("");
         }
     }, [path, searchParams]);
+
+    const clearSearch = () => {
+        setSearchValue("");
+
+        const params = new URLSearchParams(searchParams);
+        params.delete("keyword");
+        params.delete("page");
+
+        const queryString = params.toString();
+        navigate(queryString ? `/products?${queryString}` : "/products");
+        setNavbarOpen(false);
+    };
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
@@ -69,6 +83,16 @@ const Navbar = () => {
                             placeholder="Search products"
                             className="w-full bg-transparent px-2 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
                         />
+                        {searchValue ? (
+                            <button
+                                type="button"
+                                onClick={clearSearch}
+                                aria-label="Clear search"
+                                className="px-3 text-slate-500 transition-colors hover:text-slate-800"
+                            >
+                                <RxCross2 size={18} />
+                            </button>
+                        ) : null}
                         <button
                             type="submit"
                             className="bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
@@ -92,6 +116,16 @@ const Navbar = () => {
                                 placeholder="Search products"
                                 className="w-full bg-transparent px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
                             />
+                            {searchValue ? (
+                                <button
+                                    type="button"
+                                    onClick={clearSearch}
+                                    aria-label="Clear search"
+                                    className="text-slate-500 transition-colors hover:text-slate-800"
+                                >
+                                    <RxCross2 size={18} />
+                                </button>
+                            ) : null}
                         </div>
                         <button
                             type="submit"

@@ -7,8 +7,10 @@ import Filter from "./Filter";
 import useProductFilter from "../../hooks/useProductFilter";
 import Loader from "../shared/Loader";
 import Paginations from "../shared/Paginations";
+import { useSearchParams } from "react-router-dom";
 
 const Products = () => {
+    const [searchParams] = useSearchParams();
     const { isLoading, errorMessage } = useSelector(
         (state) => state.errors
     );
@@ -17,6 +19,7 @@ const Products = () => {
     )
     const dispatch = useDispatch();
     useProductFilter();
+    const activeKeyword = searchParams.get("keyword") || "";
 
     useEffect(() => {
         dispatch(fetchCategories());
@@ -25,6 +28,11 @@ const Products = () => {
     return (
         <div className="lg:px-14 sm:px-8 px-4 py-14 2xl:w-[90%] 2xl:mx-auto">
             <Filter categories={categories ? categories : []}/>
+            {activeKeyword ? (
+                <div className="mt-6 rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-slate-700">
+                    Showing results for <span className="font-semibold text-slate-900">"{activeKeyword}"</span>
+                </div>
+            ) : null}
             {isLoading ? (
                 <Loader />
             ) : errorMessage ? (

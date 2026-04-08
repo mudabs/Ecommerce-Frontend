@@ -1,30 +1,106 @@
 import { Badge } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaShoppingCart, FaSignInAlt, FaStore } from "react-icons/fa";
+import { FiSearch } from "react-icons/fi";
 import { IoIosMenu } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { useSelector } from "react-redux";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import UserMenu from "../UserMenu";
 
 const Navbar = () => {
-    const path = useLocation().pathname;
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const path = location.pathname;
     const [navbarOpen, setNavbarOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
     const { cart } = useSelector((state) => state.carts);
     const { user } = useSelector((state) => state.auth);
     const isAuthenticated = Boolean(user && (user?.id || user?.username || user?.email));
+
+    useEffect(() => {
+        if (path === "/products") {
+            setSearchValue(searchParams.get("keyword") || "");
+        }
+    }, [path, searchParams]);
+
+    const handleSearchSubmit = (event) => {
+        event.preventDefault();
+
+        const params = path === "/products"
+            ? new URLSearchParams(searchParams)
+            : new URLSearchParams();
+
+        params.delete("page");
+
+        const normalizedSearch = searchValue.trim();
+        if (normalizedSearch) {
+            params.set("keyword", normalizedSearch);
+        } else {
+            params.delete("keyword");
+        }
+
+        const queryString = params.toString();
+        navigate(queryString ? `/products?${queryString}` : "/products");
+        setNavbarOpen(false);
+    };
     
     return (
         <div className="h-17.5 bg-custom-gradient text-white z-50 flex items-center sticky top-0">
-            <div className="lg:px-14 sm:px-8 px-4 w-full flex justify-between">
+            <div className="lg:px-14 sm:px-8 px-4 w-full flex items-center gap-4 justify-between">
                 <Link to="/" className="flex items-center text-2xl font-bold">
                     <FaStore className="mr-2 text-3xl" />
                     <span className="font-[Poppins]">Smartcart</span>
                 </Link>
 
+                <form
+                    onSubmit={handleSearchSubmit}
+                    className="hidden md:flex flex-1 max-w-2xl items-center"
+                >
+                    <div className="flex w-full overflow-hidden rounded-md border border-white/20 bg-white">
+                        <div className="flex items-center px-3 text-slate-500">
+                            <FiSearch size={18} />
+                        </div>
+                        <input
+                            type="text"
+                            value={searchValue}
+                            onChange={(event) => setSearchValue(event.target.value)}
+                            placeholder="Search products"
+                            className="w-full bg-transparent px-2 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                        />
+                        <button
+                            type="submit"
+                            className="bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+                        >
+                            Search
+                        </button>
+                    </div>
+                </form>
+
                         <ul className={`flex sm:gap-10 gap-4 sm:items-center  text-slate-800 sm:static absolute left-0 top-17.5 sm:shadow-none shadow-md ${
             navbarOpen ? "h-fit sm:pb-0 pb-5" : "h-0 overflow-hidden"
           }  transition-all duration-100 sm:h-fit sm:bg-none bg-custom-gradient   text-white sm:w-fit w-full sm:flex-row flex-col px-4 sm:px-0`}>
+                <li className="md:hidden block pt-3">
+                    <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+                        <div className="flex w-full items-center rounded-md bg-white px-3">
+                            <FiSearch className="text-slate-500" size={18} />
+                            <input
+                                type="text"
+                                value={searchValue}
+                                onChange={(event) => setSearchValue(event.target.value)}
+                                placeholder="Search products"
+                                className="w-full bg-transparent px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="rounded-md bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white"
+                        >
+                            Go
+                        </button>
+                    </form>
+                </li>
                 <li className="font-medium transition-all duration-150">
                    <Link className={`${
                     path === "/" ? "text-white font-semibold" : "text-gray-200"

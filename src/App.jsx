@@ -30,6 +30,7 @@ import RouteTest from './components/RouteTest'
 import ProductDetail from './components/products/ProductDetail'
 import { useDispatch, useSelector } from 'react-redux'
 import { getUserCart, syncUserCart } from './store/actions'
+import ChatWidget from './components/chat/ChatWidget'
 //import AuthDebugger from './components/AuthDebugger'
 
 function App() {
@@ -124,6 +125,7 @@ function App() {
         {/* Debug Component - Remove in production */}
         {/* {process.env.NODE_ENV === 'development' && <AuthDebugger />} */}
       </Router>
+      <ChatWidget />
       <Toaster position='bottom-center'/>
     </React.Fragment>
   )

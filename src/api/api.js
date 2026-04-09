@@ -6,9 +6,6 @@ const api = axios.create({
     withCredentials: true,
 });
 
-let isRefreshing = false;
-let refreshPromise = null;
-
 // Add request interceptor to include JWT token in headers if available
 api.interceptors.request.use(
     (config) => {
@@ -38,8 +35,8 @@ api.interceptors.response.use(
 
         if (error.response?.status === 401 && !originalRequest._retry) {
             console.log('API Interceptor: Handling 401 error');
-            
-            // Don't try to refresh for auth endpoints to avoid infinite loops
+
+            // Don't retry auth endpoints to avoid loops.
             if (originalRequest.url?.includes('/auth/')) {
                 console.log('API Interceptor: 401 on auth endpoint, clearing auth');
                 handleAuthFailure();
@@ -48,62 +45,9 @@ api.interceptors.response.use(
 
             originalRequest._retry = true;
 
-            // Check if we're already refreshing to avoid multiple refresh attempts
-            if (!isRefreshing) {
-                isRefreshing = true;
-                console.log('API Interceptor: Starting token refresh');
-                
-                try {
-                    refreshPromise = api.post("/auth/refresh");
-                    const response = await refreshPromise;
-                    
-                    if (response.data) {
-                        console.log('API Interceptor: Token refresh successful');
-                        // Update localStorage with new token data
-                        localStorage.setItem("auth", JSON.stringify(response.data));
-                        
-                        // Update the original request with new token
-                        const newToken = response.data?.jwtToken || response.data?.token;
-                        if (newToken) {
-                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                        }
-                        
-                        isRefreshing = false;
-                        refreshPromise = null;
-                        
-                        // Retry the original request with new token
-                        return api(originalRequest);
-                    }
-                } catch (refreshError) {
-                    console.log("API Interceptor: Token refresh failed:", refreshError);
-                    isRefreshing = false;
-                    refreshPromise = null;
-                    
-                    // Only clear auth if the refresh actually failed with 401/403
-                    if (refreshError.response?.status === 401 || refreshError.response?.status === 403) {
-                        handleAuthFailure();
-                    }
-                    return Promise.reject(refreshError);
-                }
-            } else if (refreshPromise) {
-                console.log('API Interceptor: Waiting for ongoing refresh');
-                // Wait for the ongoing refresh to complete
-                try {
-                    await refreshPromise;
-                    const authData = localStorage.getItem("auth");
-                    if (authData) {
-                        const parsedAuth = JSON.parse(authData);
-                        const newToken = parsedAuth?.jwtToken || parsedAuth?.token;
-                        if (newToken) {
-                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                        }
-                    }
-                    return api(originalRequest);
-                } catch (refreshError) {
-                    handleAuthFailure();
-                    return Promise.reject(refreshError);
-                }
-            }
+            // This backend issues a single JWT and does not expose a refresh endpoint.
+            // A 401 therefore means the session is no longer usable and the client must re-authenticate.
+            handleAuthFailure();
         }
         
         return Promise.reject(error);

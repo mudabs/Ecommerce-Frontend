@@ -1522,3 +1522,44 @@ export const getAllSellers = (pageNumber = 0, toast) => async (dispatch, getStat
         throw error;
     }
 };
+
+
+// ==================== AI CHAT ACTIONS ====================
+
+export const sendChatMessage = (message) => async (dispatch, getState) => {
+    dispatch({ type: "CHAT_ADD_USER_MESSAGE", payload: message });
+    dispatch({ type: "CHAT_LOADING" });
+
+    try {
+        const requestConfig = getAuthRequestConfig(getState);
+        if (!requestConfig) {
+            dispatch({
+                type: "CHAT_ERROR",
+                payload: "Please log in to use the AI assistant.",
+            });
+            return;
+        }
+
+        const { data } = await api.post("/ai/chat", { message }, requestConfig);
+        dispatch({ type: "CHAT_RESPONSE", payload: data });
+    } catch (error) {
+        dispatch({
+            type: "CHAT_ERROR",
+            payload: extractApiErrorMessage(error, "Failed to get AI response. Please try again."),
+        });
+    }
+};
+
+export const clearChatHistory = () => async (dispatch, getState) => {
+    try {
+        const requestConfig = getAuthRequestConfig(getState);
+        if (requestConfig) {
+            await api.delete("/ai/chat/history", requestConfig);
+        }
+    } catch (error) {
+        console.warn("Failed to clear server chat history:", error);
+    }
+    dispatch({ type: "CHAT_CLEAR" });
+};
+
+export const toggleChat = () => ({ type: "CHAT_TOGGLE" });

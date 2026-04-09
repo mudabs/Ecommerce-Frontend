@@ -18,7 +18,11 @@ export const getBackendImageUrl = (imagePath = "") => {
   const source = String(imagePath || "").trim();
 
   if (!source) {
-    return "";
+    return IMAGE_FALLBACK_URL;
+  }
+
+  if (/default\.png$/i.test(source)) {
+    return IMAGE_FALLBACK_URL;
   }
 
   if (/^https?:\/\//i.test(source)) {

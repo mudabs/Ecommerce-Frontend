@@ -536,6 +536,7 @@ export const registerNewUser
 export const logOutUser = (navigate) => (dispatch) => {
     dispatch({ type:"LOG_OUT" });
     dispatch({ type: "CLEAR_CART" });
+    dispatch({ type: "CHAT_CLEAR" });
     localStorage.removeItem("auth");
     localStorage.removeItem("cartItems");
     localStorage.removeItem("PAYMENT_METHOD");
@@ -1280,6 +1281,12 @@ export const registerUser = (userData, navigate, toast) => async (dispatch) => {
 
 export const logoutUser = (navigate, toast) => async (dispatch) => {
     try {
+        try {
+            await api.delete("/ai/chat/history");
+        } catch (chatError) {
+            console.warn("Failed to clear chat history before logout:", chatError);
+        }
+
         await api.post("/auth/signout");
         
         // Clear localStorage
@@ -1290,6 +1297,7 @@ export const logoutUser = (navigate, toast) => async (dispatch) => {
         localStorage.removeItem("SAVED_PAYMENT_METHODS");
         
         dispatch({ type: "LOG_OUT" });
+        dispatch({ type: "CHAT_CLEAR" });
         toast.success("Logged out successfully!");
         navigate("/login");
     } catch (error) {
@@ -1300,6 +1308,7 @@ export const logoutUser = (navigate, toast) => async (dispatch) => {
         localStorage.removeItem("PAYMENT_METHOD");
         localStorage.removeItem("SAVED_PAYMENT_METHODS");
         dispatch({ type: "LOG_OUT" });
+        dispatch({ type: "CHAT_CLEAR" });
         navigate("/login");
     }
 };

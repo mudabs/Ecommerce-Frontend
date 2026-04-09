@@ -6,6 +6,9 @@ const initialState = {
 
 export const chatReducer = (state = initialState, action) => {
     switch (action.type) {
+        case "LOGIN_USER":
+        case "LOG_OUT":
+            return { ...initialState };
         case "CHAT_TOGGLE":
             return { ...state, isOpen: !state.isOpen };
         case "CHAT_OPEN":
@@ -52,7 +55,7 @@ export const chatReducer = (state = initialState, action) => {
                 ],
             };
         case "CHAT_CLEAR":
-            return { ...state, messages: [] };
+            return { ...state, messages: [], isLoading: false };
         default:
             return state;
     }

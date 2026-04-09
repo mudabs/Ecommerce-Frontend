@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom'
 import { Description, Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react';
 import { RxCross1 } from 'react-icons/rx';
 import { FaBars } from 'react-icons/fa';
+import Breadcrumb from '../shared/Breadcrumb';
 
 const AdminLayout = () => {
     let [sidebarOpen, setSidebarOpen] = useState(false);
@@ -53,6 +54,8 @@ const AdminLayout = () => {
                     <span className='sr-only'> Open Sidebar</span>
                     <FaBars className='text-slate-800 text-2xl'/>
             </button>
+
+            <Breadcrumb adminStyle />
 
             <main className=''>
                 <div className='p-4 sm:p-6 xl:p-8'>

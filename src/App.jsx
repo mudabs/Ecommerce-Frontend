@@ -31,6 +31,7 @@ import ProductDetail from './components/products/ProductDetail'
 import { useDispatch, useSelector } from 'react-redux'
 import { getUserCart, syncUserCart } from './store/actions'
 import ChatWidget from './components/chat/ChatWidget'
+import Breadcrumb from './components/shared/Breadcrumb'
 //import AuthDebugger from './components/AuthDebugger'
 
 function App() {
@@ -80,6 +81,7 @@ function App() {
     <React.Fragment>
       <Router>
         <Navbar />
+        <Breadcrumb />
         <Routes>
           <Route path='/' element={ <Home />}/>
           <Route path='/products' element={ <Products />}/>

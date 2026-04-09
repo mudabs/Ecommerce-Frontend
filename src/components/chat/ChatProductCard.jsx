@@ -1,4 +1,5 @@
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { addToCart } from "../../store/actions";
 import { formatPrice } from "../../utils/formatPrice";
 import { getBackendImageUrl, handleImageLoadError } from "../../utils/env";
@@ -6,22 +7,34 @@ import toast from "react-hot-toast";
 
 const ChatProductCard = ({ product }) => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    const handleAddToCart = () => {
+    const handleAddToCart = (e) => {
+        e.stopPropagation();
         dispatch(addToCart(product, 1, toast));
+    };
+
+    const handleOpenProduct = () => {
+        navigate(`/products/${product.productId}`);
     };
 
     const price = product.specialPrice ?? product.price;
     const hasDiscount = product.discount && product.discount > 0;
 
     return (
-        <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm hover:shadow-md transition">
+        <div
+            onClick={handleOpenProduct}
+            role="link"
+            tabIndex={0}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleOpenProduct()}
+            className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm hover:shadow-md transition cursor-pointer"
+        >
             {product.image && (
                 <img
                     src={getBackendImageUrl(product.image)}
                     alt={product.productName}
                     onError={handleImageLoadError}
-                    className="w-14 h-14 object-cover rounded-md flex-shrink-0"
+                    className="w-14 h-14 object-cover rounded-md shrink-0"
                 />
             )}
             <div className="flex-1 min-w-0">
@@ -40,7 +53,7 @@ const ChatProductCard = ({ product }) => {
             </div>
             <button
                 onClick={handleAddToCart}
-                className="text-xs px-2.5 py-1.5 bg-custom-blue text-white rounded-md hover:bg-blue-700 transition flex-shrink-0"
+                className="text-xs px-2.5 py-1.5 bg-custom-blue text-white rounded-md hover:bg-blue-700 transition shrink-0"
             >
                 Add
             </button>

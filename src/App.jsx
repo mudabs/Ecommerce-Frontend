@@ -124,8 +124,8 @@ function App() {
         
         {/* Debug Component - Remove in production */}
         {/* {process.env.NODE_ENV === 'development' && <AuthDebugger />} */}
+        <ChatWidget />
       </Router>
-      <ChatWidget />
       <Toaster position='bottom-center'/>
     </React.Fragment>
   )

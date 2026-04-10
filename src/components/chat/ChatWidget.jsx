@@ -1,18 +1,80 @@
 import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { sendChatMessage, clearChatHistory, toggleChat } from "../../store/actions";
-import { IoMdSend, IoMdClose } from "react-icons/io";
+import { IoMdSend, IoMdClose, IoMdRemove } from "react-icons/io";
 import { BsChatDotsFill, BsTrash } from "react-icons/bs";
 import { FiShoppingBag } from "react-icons/fi";
 import ChatProductCard from "./ChatProductCard";
+
+const PANEL_MARGIN = 16;
+const PANEL_WIDTH = 400;
+const PANEL_HEIGHT = 600;
+const LAUNCHER_SIZE = 56;
+
+const getWidgetDimensions = (mode) => {
+    if (typeof window === "undefined") {
+        return {
+            width: mode === "panel" ? PANEL_WIDTH : LAUNCHER_SIZE,
+            height: mode === "panel" ? PANEL_HEIGHT : LAUNCHER_SIZE,
+        };
+    }
+
+    return {
+        width:
+            mode === "panel"
+                ? Math.min(PANEL_WIDTH, Math.max(320, window.innerWidth - PANEL_MARGIN * 2))
+                : LAUNCHER_SIZE,
+        height:
+            mode === "panel"
+                ? Math.min(PANEL_HEIGHT, Math.max(420, window.innerHeight - PANEL_MARGIN * 2))
+                : LAUNCHER_SIZE,
+    };
+};
+
+const clampPosition = (position, mode) => {
+    if (typeof window === "undefined") {
+        return position;
+    }
+
+    const { width, height } = getWidgetDimensions(mode);
+    const maxX = Math.max(PANEL_MARGIN, window.innerWidth - width - PANEL_MARGIN);
+    const maxY = Math.max(PANEL_MARGIN, window.innerHeight - height - PANEL_MARGIN);
+
+    return {
+        x: Math.min(Math.max(position.x, PANEL_MARGIN), maxX),
+        y: Math.min(Math.max(position.y, PANEL_MARGIN), maxY),
+    };
+};
+
+const getDefaultPosition = (mode) => {
+    if (typeof window === "undefined") {
+        return { x: PANEL_MARGIN, y: PANEL_MARGIN };
+    }
+
+    const { width, height } = getWidgetDimensions(mode);
+
+    return clampPosition(
+        {
+            x: window.innerWidth - width - 24,
+            y: window.innerHeight - height - 24,
+        },
+        mode
+    );
+};
 
 const ChatWidget = () => {
     const dispatch = useDispatch();
     const { messages, isLoading, isOpen } = useSelector((state) => state.chat);
     const { user } = useSelector((state) => state.auth);
     const [input, setInput] = useState("");
+    const [isMinimized, setIsMinimized] = useState(false);
+    const [position, setPosition] = useState(() => getDefaultPosition("launcher"));
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+    const dragStateRef = useRef(null);
+    const draggedRef = useRef(false);
+
+    const widgetMode = isOpen && !isMinimized ? "panel" : "launcher";
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -23,6 +85,29 @@ const ChatWidget = () => {
             inputRef.current.focus();
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        setPosition((currentPosition) => clampPosition(currentPosition, widgetMode));
+    }, [widgetMode]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setPosition((currentPosition) => clampPosition(currentPosition, widgetMode));
+        };
+
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [widgetMode]);
+
+    useEffect(() => {
+        return () => {
+            window.removeEventListener("pointermove", handlePointerMove);
+            window.removeEventListener("pointerup", handlePointerUp);
+        };
+    }, []);
 
     const handleSend = () => {
         const trimmed = input.trim();
@@ -42,26 +127,101 @@ const ChatWidget = () => {
         dispatch(clearChatHistory());
     };
 
+    function handlePointerMove(event) {
+        if (!dragStateRef.current) return;
+
+        const { mode, startX, startY, originX, originY } = dragStateRef.current;
+        const deltaX = event.clientX - startX;
+        const deltaY = event.clientY - startY;
+
+        if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+            draggedRef.current = true;
+        }
+
+        setPosition(
+            clampPosition(
+                {
+                    x: originX + deltaX,
+                    y: originY + deltaY,
+                },
+                mode
+            )
+        );
+    }
+
+    function handlePointerUp() {
+        dragStateRef.current = null;
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+
+        window.setTimeout(() => {
+            draggedRef.current = false;
+        }, 0);
+    }
+
+    const startDrag = (event, mode) => {
+        if (event.button !== undefined && event.button !== 0) return;
+
+        dragStateRef.current = {
+            mode,
+            startX: event.clientX,
+            startY: event.clientY,
+            originX: position.x,
+            originY: position.y,
+        };
+        draggedRef.current = false;
+
+        window.addEventListener("pointermove", handlePointerMove);
+        window.addEventListener("pointerup", handlePointerUp);
+    };
+
+    const handleLauncherClick = () => {
+        if (draggedRef.current) return;
+
+        if (isMinimized) {
+            setIsMinimized(false);
+            return;
+        }
+
+        dispatch(toggleChat());
+    };
+
+    const handleMinimize = () => {
+        setIsMinimized(true);
+    };
+
+    const launcherTitle = isMinimized ? "Restore AI Assistant" : "Open AI Assistant";
+
     if (!user) return null;
 
     return (
         <>
             {/* Floating toggle button */}
-            {!isOpen && (
+            {(!isOpen || isMinimized) && (
                 <button
-                    onClick={() => dispatch(toggleChat())}
-                    className="fixed bottom-6 right-6 z-50 bg-custom-blue text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform duration-200"
-                    aria-label="Open AI Assistant"
+                    type="button"
+                    onPointerDown={(event) => startDrag(event, "launcher")}
+                    onClick={handleLauncherClick}
+                    className="fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-custom-blue text-white shadow-lg transition-transform duration-200 hover:scale-105 active:cursor-grabbing"
+                    style={{ left: position.x, top: position.y }}
+                    aria-label={launcherTitle}
+                    title={launcherTitle}
                 >
                     <BsChatDotsFill size={24} />
                 </button>
             )}
 
             {/* Chat panel */}
-            {isOpen && (
-                <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-4rem)] bg-white rounded-2xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden">
+            {isOpen && !isMinimized && (
+                <div
+                    className="fixed z-50 flex h-150 max-h-[calc(100vh-2rem)] w-100 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
+                    style={{ left: position.x, top: position.y }}
+                >
                     {/* Header */}
-                    <div className="bg-custom-blue text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
+                    <div
+                        className="flex shrink-0 cursor-grab items-center justify-between bg-custom-blue px-4 py-3 text-white active:cursor-grabbing"
+                        onPointerDown={(event) => startDrag(event, "panel")}
+                    >
                         <div className="flex items-center gap-2">
                             <FiShoppingBag size={20} />
                             <div>
@@ -71,6 +231,7 @@ const ChatWidget = () => {
                         </div>
                         <div className="flex items-center gap-2">
                             <button
+                                type="button"
                                 onClick={handleClear}
                                 className="p-1.5 hover:bg-white/20 rounded-md transition"
                                 title="Clear conversation"
@@ -78,8 +239,18 @@ const ChatWidget = () => {
                                 <BsTrash size={14} />
                             </button>
                             <button
+                                type="button"
+                                onClick={handleMinimize}
+                                className="p-1.5 hover:bg-white/20 rounded-md transition"
+                                title="Minimize assistant"
+                            >
+                                <IoMdRemove size={18} />
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => dispatch(toggleChat())}
                                 className="p-1.5 hover:bg-white/20 rounded-md transition"
+                                title="Hide assistant"
                             >
                                 <IoMdClose size={18} />
                             </button>
@@ -177,7 +348,7 @@ const ChatWidget = () => {
                     </div>
 
                     {/* Input */}
-                    <div className="px-3 py-3 bg-white border-t border-gray-200 flex-shrink-0">
+                    <div className="px-3 py-3 bg-white border-t border-gray-200 shrink-0">
                         <div className="flex items-center gap-2">
                             <input
                                 ref={inputRef}
@@ -191,6 +362,7 @@ const ChatWidget = () => {
                                 maxLength={2000}
                             />
                             <button
+                                type="button"
                                 onClick={handleSend}
                                 disabled={!input.trim() || isLoading}
                                 className="p-2 bg-custom-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"

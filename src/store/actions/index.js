@@ -871,6 +871,27 @@ export const analyticsAction = () => async (dispatch, getState) => {
         }
 };
 
+export const fetchDashboardData = () => async (dispatch, getState) => {
+    try {
+        dispatch({ type: "IS_FETCHING" });
+        const requestConfig = getAuthRequestConfig(getState);
+
+        const [analyticsRes, ordersRes] = await Promise.all([
+            api.get('/admin/app/analytics', requestConfig),
+            api.get('/admin/orders?pageSize=100&sortBy=orderDate&sortDir=desc', requestConfig),
+        ]);
+
+        dispatch({ type: "FETCH_ANALYTICS", payload: analyticsRes.data });
+        dispatch({ type: "FETCH_DASHBOARD_ORDERS", payload: ordersRes.data.content || [] });
+        dispatch({ type: "IS_SUCCESS" });
+    } catch (error) {
+        dispatch({
+            type: "IS_ERROR",
+            payload: extractApiErrorMessage(error, "Failed to fetch dashboard data"),
+        });
+    }
+};
+
 export const getOrdersForDashboard = (queryString, isAdmin) => async (dispatch, getState) => {
     try {
         dispatch({ type: "IS_FETCHING" });

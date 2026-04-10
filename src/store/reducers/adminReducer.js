@@ -1,5 +1,6 @@
 const initialState = {
     analytics: {},
+    dashboardOrders: [],
 };
 
 export const adminReducer = (state = initialState, action) => {
@@ -8,6 +9,11 @@ export const adminReducer = (state = initialState, action) => {
             return {
                 ...state,
                 analytics: action.payload,
+            };
+        case "FETCH_DASHBOARD_ORDERS":
+            return {
+                ...state,
+                dashboardOrders: action.payload,
             };
             
         default:

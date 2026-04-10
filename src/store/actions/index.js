@@ -996,6 +996,59 @@ const resolveDashboardProductAccess = (getState, isAdminOverride) => {
     return Boolean(user?.roles?.includes("ROLE_ADMIN"));
 };
 
+const DEFAULT_DASHBOARD_PRODUCT_PAGE_SIZE = 10;
+const DASHBOARD_PRODUCT_SEARCH_BATCH_SIZE = 100;
+
+const normalizeSearchableText = (value) =>
+    String(value || "")
+        .toLowerCase()
+        .trim();
+
+const fetchAllDashboardProductsForSearch = async (endpoint, requestConfig) => {
+    const aggregatedProducts = [];
+    let pageNumber = 0;
+    let lastPage = false;
+    let pageSize = DEFAULT_DASHBOARD_PRODUCT_PAGE_SIZE;
+
+    while (!lastPage) {
+        const params = new URLSearchParams();
+        params.set("pageNumber", pageNumber);
+        params.set("pageSize", DASHBOARD_PRODUCT_SEARCH_BATCH_SIZE);
+
+        const { data } = await api.get(buildUrlWithQuery(endpoint, params.toString()), requestConfig);
+        const content = Array.isArray(data?.content) ? data.content : [];
+
+        aggregatedProducts.push(...content);
+        pageSize = Number(data?.pageSize) || pageSize;
+        lastPage = Boolean(data?.lastPage);
+        pageNumber += 1;
+
+        if (!content.length && data?.lastPage !== false) {
+            break;
+        }
+    }
+
+    return {
+        products: aggregatedProducts,
+        pageSize,
+    };
+};
+
+const filterDashboardProducts = (products, keyword) => {
+    const normalizedKeyword = normalizeSearchableText(keyword);
+
+    if (!normalizedKeyword) {
+        return Array.isArray(products) ? products : [];
+    }
+
+    return (Array.isArray(products) ? products : []).filter((product) => {
+        const productName = normalizeSearchableText(product?.productName);
+        const description = normalizeSearchableText(product?.description);
+
+        return productName.includes(normalizedKeyword) || description.includes(normalizedKeyword);
+    });
+};
+
 
 export const dashboardProductsAction = (queryString, isAdmin) => async (dispatch, getState) => {
     try {
@@ -1003,6 +1056,35 @@ export const dashboardProductsAction = (queryString, isAdmin) => async (dispatch
         const hasAdminAccess = resolveDashboardProductAccess(getState, isAdmin);
         const endpoint = hasAdminAccess ? "/admin/products" : "/seller/products";
         const requestConfig = getAuthRequestConfig(getState);
+        const searchParams = new URLSearchParams(queryString || "");
+        const keyword = searchParams.get("keyword") || "";
+        const requestedPageNumber = Number(searchParams.get("pageNumber") || 0);
+
+        if (keyword.trim()) {
+            const { products: allProducts, pageSize: serverPageSize } = await fetchAllDashboardProductsForSearch(
+                endpoint,
+                requestConfig
+            );
+            const filteredProducts = filterDashboardProducts(allProducts, keyword);
+            const effectivePageSize = serverPageSize || DEFAULT_DASHBOARD_PRODUCT_PAGE_SIZE;
+            const totalElements = filteredProducts.length;
+            const totalPages = Math.max(1, Math.ceil(totalElements / effectivePageSize));
+            const safePageNumber = Math.min(Math.max(requestedPageNumber, 0), totalPages - 1);
+            const startIndex = safePageNumber * effectivePageSize;
+            const paginatedProducts = filteredProducts.slice(startIndex, startIndex + effectivePageSize);
+
+            dispatch({
+                type: "FETCH_PRODUCTS",
+                payload: paginatedProducts,
+                pageNumber: safePageNumber,
+                pageSize: effectivePageSize,
+                totalElements,
+                totalPages,
+                lastPage: safePageNumber >= totalPages - 1,
+            });
+            dispatch({ type: "IS_SUCCESS" });
+            return;
+        }
         
         const { data } = await api.get(buildUrlWithQuery(endpoint, queryString), requestConfig);
         dispatch({

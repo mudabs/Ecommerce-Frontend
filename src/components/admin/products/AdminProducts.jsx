@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { MdAddShoppingCart } from 'react-icons/md';
+import { FiRefreshCw, FiSearch } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../../shared/Loader';
 import { FaBoxOpen } from 'react-icons/fa';
@@ -24,6 +25,7 @@ const AdminProducts = () => {
   const [currentPage, setCurrentPage] = useState(
       pagination?.pageNumber + 1 || 1
     );
+  const [searchTerm, setSearchTerm] = useState('');
 
   const dispatch = useDispatch();
   
@@ -51,6 +53,34 @@ const AdminProducts = () => {
     const pageFromQuery = Number(searchParams.get("page") || 1);
     setCurrentPage(pageFromQuery > 0 ? pageFromQuery : 1);
   }, [searchParams]);
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get('keyword') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handler = window.setTimeout(() => {
+      const nextParams = new URLSearchParams(searchParams);
+      const normalizedSearch = searchTerm.trim();
+
+      if (normalizedSearch === (searchParams.get('keyword') || '')) {
+        return;
+      }
+
+      if (normalizedSearch) {
+        nextParams.set('keyword', normalizedSearch);
+      } else {
+        nextParams.delete('keyword');
+      }
+
+      nextParams.delete('page');
+      navigate(`${pathname}?${nextParams.toString()}`);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(handler);
+    };
+  }, [navigate, pathname, searchParams, searchTerm]);
 
   const tableRecords = products?.map((item) => {
   return {
@@ -93,6 +123,14 @@ const handlePaginationChange = (paginationModel) => {
   navigate(`${pathname}?${params}`)
 };
 
+const handleClearSearch = () => {
+  setSearchTerm('');
+  const nextParams = new URLSearchParams(searchParams);
+  nextParams.delete('keyword');
+  nextParams.delete('page');
+  navigate(nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname);
+};
+
 
 const onDeleteHandler = () => {
   dispatch(deleteProduct(setLoader, selectedProduct?.id, toast, setOpenDeleteModal, isAdmin, currentQueryString));
@@ -101,10 +139,31 @@ const onDeleteHandler = () => {
   const emptyProduct = !products || products?.length ===0;
   return (
     <div>
-      <div className='pt-6 pb-10 flex justify-end'>
+      <div className='flex flex-col gap-4 pb-10 pt-6 lg:flex-row lg:items-center lg:justify-between'>
+        <div className='relative w-full max-w-xl'>
+          <input
+            type='text'
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder='Search products by name or keyword'
+            className='w-full rounded-md border border-gray-400 py-2 pl-10 pr-12 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#1976d2]'
+          />
+          <FiSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-700' size={18} />
+          {searchTerm && (
+            <button
+              type='button'
+              onClick={handleClearSearch}
+              className='absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-700 transition hover:bg-slate-100'
+              title='Clear product search'
+            >
+              <FiRefreshCw size={16} />
+            </button>
+          )}
+        </div>
+
         <button
           onClick={() => setOpenAddModal(true)}
-          className='bg-custom-blue hover:bg-blue-800 text-white font-semibold py-2 px-4 flex items-center gap-2 rounded-md shadow-md transition-colors hover:text-slate-300 duration-300'>
+          className='bg-custom-blue hover:bg-blue-800 text-white font-semibold py-2 px-4 flex items-center justify-center gap-2 rounded-md shadow-md transition-colors hover:text-slate-300 duration-300'>
           <MdAddShoppingCart className='text-xl' />
           Add Product
         </button>
@@ -123,7 +182,7 @@ const onDeleteHandler = () => {
         <div className='flex flex-col items-center justify-center text-gray-600 py-10'>
           <FaBoxOpen size={50} className='mb-3'/>
           <h2 className='text-2xl font-semibold'>
-            No products created yet  
+                {searchParams.get('keyword') ? 'No products match your search' : 'No products created yet'}
           </h2>
         </div>
       ) : (

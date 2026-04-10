@@ -54,7 +54,13 @@ export const useDashboardProductFilter = () => {
             ? Number(searchParams.get("page"))
             : 1;
 
+        const keyword = searchParams.get("keyword") || null;
+
         params.set("pageNumber", currentPage - 1);
+
+        if (keyword) {
+            params.set("keyword", keyword);
+        }
 
         const queryString = params.toString();
         dispatch(dashboardProductsAction(queryString, isAdmin));

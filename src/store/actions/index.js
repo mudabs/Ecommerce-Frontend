@@ -897,7 +897,19 @@ export const getOrdersForDashboard = (queryString, isAdmin) => async (dispatch, 
         dispatch({ type: "IS_FETCHING" });
         const endpoint = isAdmin ? "/admin/orders" : "/seller/orders";
         const requestConfig = getAuthRequestConfig(getState);
-        
+        const searchParams = new URLSearchParams(queryString || "");
+        const keyword = searchParams.get("keyword") || "";
+        const requestedPage = Number(searchParams.get("pageNumber") || 0);
+
+        if (keyword.trim()) {
+            const { items, pageSize: serverPageSize } = await fetchAllPagesForSearch(endpoint, requestConfig);
+            const filtered = filterByFields(items, keyword, ["email", "orderStatus"]);
+            const { page, ...pagination } = paginateFilteredResults(filtered, requestedPage, serverPageSize || DEFAULT_DASHBOARD_PAGE_SIZE);
+            dispatch({ type: "GET_ADMIN_ORDERS", payload: page, ...pagination });
+            dispatch({ type: "IS_SUCCESS" });
+            return;
+        }
+
         const { data } = await api.get(buildUrlWithQuery(endpoint, queryString), requestConfig);
         dispatch({
             type: "GET_ADMIN_ORDERS",
@@ -1017,58 +1029,70 @@ const resolveDashboardProductAccess = (getState, isAdminOverride) => {
     return Boolean(user?.roles?.includes("ROLE_ADMIN"));
 };
 
-const DEFAULT_DASHBOARD_PRODUCT_PAGE_SIZE = 10;
-const DASHBOARD_PRODUCT_SEARCH_BATCH_SIZE = 100;
+const DEFAULT_DASHBOARD_PAGE_SIZE = 10;
+const DASHBOARD_SEARCH_BATCH_SIZE = 100;
+const DEFAULT_DASHBOARD_PRODUCT_PAGE_SIZE = DEFAULT_DASHBOARD_PAGE_SIZE;
+const DASHBOARD_PRODUCT_SEARCH_BATCH_SIZE = DASHBOARD_SEARCH_BATCH_SIZE;
 
 const normalizeSearchableText = (value) =>
     String(value || "")
         .toLowerCase()
         .trim();
 
-const fetchAllDashboardProductsForSearch = async (endpoint, requestConfig) => {
-    const aggregatedProducts = [];
+const fetchAllPagesForSearch = async (endpoint, requestConfig, batchSize = DASHBOARD_SEARCH_BATCH_SIZE) => {
+    const aggregated = [];
     let pageNumber = 0;
     let lastPage = false;
-    let pageSize = DEFAULT_DASHBOARD_PRODUCT_PAGE_SIZE;
+    let pageSize = DEFAULT_DASHBOARD_PAGE_SIZE;
 
     while (!lastPage) {
         const params = new URLSearchParams();
         params.set("pageNumber", pageNumber);
-        params.set("pageSize", DASHBOARD_PRODUCT_SEARCH_BATCH_SIZE);
+        params.set("pageSize", batchSize);
 
         const { data } = await api.get(buildUrlWithQuery(endpoint, params.toString()), requestConfig);
         const content = Array.isArray(data?.content) ? data.content : [];
-
-        aggregatedProducts.push(...content);
+        aggregated.push(...content);
         pageSize = Number(data?.pageSize) || pageSize;
         lastPage = Boolean(data?.lastPage);
         pageNumber += 1;
 
-        if (!content.length && data?.lastPage !== false) {
-            break;
-        }
+        if (!content.length && data?.lastPage !== false) break;
     }
 
+    return { items: aggregated, pageSize };
+};
+
+const filterByFields = (items, keyword, fields) => {
+    const normalized = normalizeSearchableText(keyword);
+    if (!normalized) return Array.isArray(items) ? items : [];
+    return (Array.isArray(items) ? items : []).filter((item) =>
+        fields.some((field) => normalizeSearchableText(item?.[field]).includes(normalized))
+    );
+};
+
+const paginateFilteredResults = (filteredItems, requestedPage, pageSize) => {
+    const totalElements = filteredItems.length;
+    const totalPages = Math.max(1, Math.ceil(totalElements / pageSize));
+    const safePage = Math.min(Math.max(requestedPage, 0), totalPages - 1);
+    const start = safePage * pageSize;
     return {
-        products: aggregatedProducts,
+        page: filteredItems.slice(start, start + pageSize),
+        pageNumber: safePage,
         pageSize,
+        totalElements,
+        totalPages,
+        lastPage: safePage >= totalPages - 1,
     };
 };
 
-const filterDashboardProducts = (products, keyword) => {
-    const normalizedKeyword = normalizeSearchableText(keyword);
-
-    if (!normalizedKeyword) {
-        return Array.isArray(products) ? products : [];
-    }
-
-    return (Array.isArray(products) ? products : []).filter((product) => {
-        const productName = normalizeSearchableText(product?.productName);
-        const description = normalizeSearchableText(product?.description);
-
-        return productName.includes(normalizedKeyword) || description.includes(normalizedKeyword);
-    });
+const fetchAllDashboardProductsForSearch = async (endpoint, requestConfig) => {
+    const { items, pageSize } = await fetchAllPagesForSearch(endpoint, requestConfig, DASHBOARD_PRODUCT_SEARCH_BATCH_SIZE);
+    return { products: items, pageSize };
 };
+
+const filterDashboardProducts = (products, keyword) =>
+    filterByFields(products, keyword, ["productName", "description"]);
 
 
 export const dashboardProductsAction = (queryString, isAdmin) => async (dispatch, getState) => {
@@ -1218,7 +1242,20 @@ export const updateProductImageFromDashboard =
 export const getAllCategoriesDashboard = (queryString) => async (dispatch) => {
   dispatch({ type: "CATEGORY_LOADER" });
   try {
-        const { data } = await api.get(buildUrlWithQuery("/public/categories", queryString));
+    const searchParams = new URLSearchParams(queryString || "");
+    const keyword = searchParams.get("keyword") || "";
+    const requestedPage = Number(searchParams.get("pageNumber") || 0);
+
+    if (keyword.trim()) {
+        const { items, pageSize: serverPageSize } = await fetchAllPagesForSearch("/public/categories", null);
+        const filtered = filterByFields(items, keyword, ["categoryName"]);
+        const { page, ...pagination } = paginateFilteredResults(filtered, requestedPage, serverPageSize || DEFAULT_DASHBOARD_PAGE_SIZE);
+        dispatch({ type: "FETCH_CATEGORIES", payload: page, ...pagination });
+        dispatch({ type: "CATEGORY_SUCCESS" });
+        return;
+    }
+
+    const { data } = await api.get(buildUrlWithQuery("/public/categories", queryString));
     dispatch({
       type: "FETCH_CATEGORIES",
       payload: data["content"],
@@ -1319,10 +1356,22 @@ export const deleteCategoryDashboardAction =
 
   export const getAllSellersDashboard =
   (queryString) => async (dispatch, getState) => {
-    const { user } = getState().auth;
     try {
       dispatch({ type: "IS_FETCHING" });
-    const { data } = await api.get(buildUrlWithQuery("/auth/sellers", queryString));
+      const searchParams = new URLSearchParams(queryString || "");
+      const keyword = searchParams.get("keyword") || "";
+      const requestedPage = Number(searchParams.get("pageNumber") || 0);
+
+      if (keyword.trim()) {
+          const { items, pageSize: serverPageSize } = await fetchAllPagesForSearch("/auth/sellers", null);
+          const filtered = filterByFields(items, keyword, ["username", "email"]);
+          const { page, ...pagination } = paginateFilteredResults(filtered, requestedPage, serverPageSize || DEFAULT_DASHBOARD_PAGE_SIZE);
+          dispatch({ type: "GET_SELLERS", payload: page, ...pagination });
+          dispatch({ type: "IS_SUCCESS" });
+          return;
+      }
+
+      const { data } = await api.get(buildUrlWithQuery("/auth/sellers", queryString));
       dispatch({
         type: "GET_SELLERS",
         payload: data["content"],

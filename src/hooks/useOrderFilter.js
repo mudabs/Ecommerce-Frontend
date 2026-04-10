@@ -19,12 +19,15 @@ const useOrderFilter = () => {
 
         params.set("pageNumber", currentPage - 1);
 
+        const keyword = searchParams.get("keyword") || null;
+        if (keyword) {
+            params.set("keyword", keyword);
+        }
+
         const queryString = params.toString();
-        console.log("QUERY STRING", queryString);
-        
         dispatch(getOrdersForDashboard(queryString, isAdmin));
 
-    }, [dispatch, searchParams]);
+    }, [dispatch, isAdmin, searchParams]);
 };
 
 export default useOrderFilter;

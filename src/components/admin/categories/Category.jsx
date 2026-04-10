@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { DataGrid } from "@mui/x-data-grid";
 import { FaFolderOpen, FaThList } from "react-icons/fa";
+import { FiRefreshCw, FiSearch } from "react-icons/fi";
 import toast from "react-hot-toast";
 
 import Modal from "../../shared/Modal";
@@ -25,6 +26,7 @@ const Category = () => {
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { categoryLoader, errorMessage } = useSelector((state) => state.errors);
   const { categories, pagination } = useSelector((state) => state.products);
@@ -32,8 +34,38 @@ const Category = () => {
     pagination?.pageNumber + 1 || 1
   );
 
-  // Calling the `useCategoryFilter` custom hook to handle category fetching and pagination based on the current URL parameters.
   useCategoryFilter();
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get('keyword') || '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handler = window.setTimeout(() => {
+      const nextParams = new URLSearchParams(searchParams);
+      const normalizedSearch = searchTerm.trim();
+
+      if (normalizedSearch === (searchParams.get('keyword') || '')) return;
+
+      if (normalizedSearch) {
+        nextParams.set('keyword', normalizedSearch);
+      } else {
+        nextParams.delete('keyword');
+      }
+      nextParams.delete('page');
+      navigate(`${pathname}?${nextParams.toString()}`);
+    }, 500);
+
+    return () => window.clearTimeout(handler);
+  }, [navigate, pathname, searchParams, searchTerm]);
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('keyword');
+    nextParams.delete('page');
+    navigate(nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname);
+  };
 
   const tableRecords = categories?.map((item) => ({
     id: item.categoryId,
@@ -71,7 +103,28 @@ const Category = () => {
 
   return (
     <div>
-      <div className="pt-6 pb-10 flex justify-end">
+      <div className="pt-6 pb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full max-w-xl">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search categories by name"
+            className="w-full rounded-md border border-gray-400 py-2 pl-10 pr-12 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#1976d2]"
+          />
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" size={18} />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-700 transition hover:bg-slate-100"
+              title="Clear search"
+            >
+              <FiRefreshCw size={16} />
+            </button>
+          )}
+        </div>
+
         <button
           onClick={() => setOpenModal(true)}
           className="bg-custom-blue hover:bg-blue-800 text-white font-semibold py-2 px-4 flex items-center gap-2 rounded-md shadow-md transition-colors hover:text-slate-300 duration-300"
@@ -94,7 +147,7 @@ const Category = () => {
             <div className="flex flex-col items-center justify-center text-gray-600 py-10">
               <FaFolderOpen size={50} className="mb-3" />
               <h2 className="text-2xl font-semibold">
-                No Categories Created Yet
+                {searchParams.get('keyword') ? 'No categories match your search' : 'No Categories Created Yet'}
               </h2>
             </div>
           ) : (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MdAddShoppingCart } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../../shared/Loader';
@@ -39,12 +39,18 @@ const AdminProducts = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const params = new URLSearchParams(searchParams);
+  const currentQueryString = searchParams.toString();
   const pathname = useLocation().pathname;
 
   const { user } = useSelector((state) => state.auth);
   const isAdmin = user && user?.roles?.includes("ROLE_ADMIN");
 
   useDashboardProductFilter();
+
+  useEffect(() => {
+    const pageFromQuery = Number(searchParams.get("page") || 1);
+    setCurrentPage(pageFromQuery > 0 ? pageFromQuery : 1);
+  }, [searchParams]);
 
   const tableRecords = products?.map((item) => {
   return {
@@ -89,7 +95,7 @@ const handlePaginationChange = (paginationModel) => {
 
 
 const onDeleteHandler = () => {
-  dispatch(deleteProduct(setLoader, selectedProduct?.id, toast, setOpenDeleteModal, isAdmin));
+  dispatch(deleteProduct(setLoader, selectedProduct?.id, toast, setOpenDeleteModal, isAdmin, currentQueryString));
 };
 
   const emptyProduct = !products || products?.length ===0;
@@ -132,13 +138,9 @@ const onDeleteHandler = () => {
               handleProductView)}
             paginationMode='server'
             rowCount={pagination?.totalElements || 0}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: pagination?.pageSize || 10,
-                  page: currentPage - 1,
-                },
-              },
+            paginationModel={{
+              pageSize: pagination?.pageSize || 10,
+              page: currentPage - 1,
             }}
             onPaginationModelChange={handlePaginationChange}
             disableRowSelectionOnClick
@@ -164,6 +166,7 @@ const onDeleteHandler = () => {
           setOpen={openUpdateModal ? setOpenUpdateModal : setOpenAddModal}
           product={selectedProduct}
           update={openUpdateModal}
+          queryString={currentQueryString}
           />
     </Modal>
 
@@ -175,6 +178,7 @@ const onDeleteHandler = () => {
         <ImageUploadForm 
           setOpen={setOpenImageUploadModal}
           product={selectedProduct}
+          queryString={currentQueryString}
           />
     </Modal>
 

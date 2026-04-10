@@ -10,7 +10,7 @@ import SelectTextField from '../../shared/SelectTextField';
 import Skeleton from '../../shared/Skeleton';
 import ErrorPage from '../../shared/ErrorPage';
 
-const AddProductForm = ({ setOpen, product, update=false}) => {
+const AddProductForm = ({ setOpen, product, update=false, queryString = ""}) => {
 const [loader, setLoader] = useState(false);
 const [selectedCategory, setSelectedCategory] = useState();
 const { categories } = useSelector((state) => state.products);
@@ -37,14 +37,14 @@ const dispatch = useDispatch();
                 categoryId: selectedCategory.categoryId,
             };
             dispatch(addNewProductFromDashboard(
-                sendData, toast, reset, setLoader, setOpen, isAdmin
+                sendData, toast, reset, setLoader, setOpen, isAdmin, queryString
             ));
         } else {
             const sendData = {
                 ...data,
                 id: product.id,
             };
-            dispatch(updateProductFromDashboard(sendData, toast, reset, setLoader, setOpen, isAdmin));
+            dispatch(updateProductFromDashboard(sendData, toast, reset, setLoader, setOpen, isAdmin, queryString));
         }
     };
 

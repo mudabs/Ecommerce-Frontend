@@ -59,7 +59,7 @@ export const useDashboardProductFilter = () => {
         const queryString = params.toString();
         dispatch(dashboardProductsAction(queryString, isAdmin));
 
-    }, [dispatch, searchParams]);
+    }, [dispatch, isAdmin, searchParams]);
 };
 
 export default useProductFilter;

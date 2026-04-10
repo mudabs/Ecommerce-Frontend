@@ -987,11 +987,21 @@ export const updateOrderStatusFromDashboard =
     }
 };
 
+const resolveDashboardProductAccess = (getState, isAdminOverride) => {
+    if (typeof isAdminOverride === "boolean") {
+        return isAdminOverride;
+    }
+
+    const { user } = getState().auth || {};
+    return Boolean(user?.roles?.includes("ROLE_ADMIN"));
+};
+
 
 export const dashboardProductsAction = (queryString, isAdmin) => async (dispatch, getState) => {
     try {
         dispatch({ type: "IS_FETCHING" });
-        const endpoint = isAdmin ? "/admin/products" : "/seller/products";
+        const hasAdminAccess = resolveDashboardProductAccess(getState, isAdmin);
+        const endpoint = hasAdminAccess ? "/admin/products" : "/seller/products";
         const requestConfig = getAuthRequestConfig(getState);
         
         const { data } = await api.get(buildUrlWithQuery(endpoint, queryString), requestConfig);
@@ -1016,10 +1026,11 @@ export const dashboardProductsAction = (queryString, isAdmin) => async (dispatch
 
 
 export const updateProductFromDashboard = 
-    (sendData, toast, reset, setLoader, setOpen, isAdmin) => async (dispatch, getState) => {
+    (sendData, toast, reset, setLoader, setOpen, isAdmin, queryString = "") => async (dispatch, getState) => {
     try {
         setLoader(true);
-        const endpoint = isAdmin ? "/admin/products/" : "/seller/products/";
+        const hasAdminAccess = resolveDashboardProductAccess(getState, isAdmin);
+        const endpoint = hasAdminAccess ? "/admin/products/" : "/seller/products/";
         const requestConfig = getAuthRequestConfig(getState);
         
         await api.put(`${endpoint}${sendData.id}`, sendData, requestConfig);
@@ -1027,7 +1038,7 @@ export const updateProductFromDashboard =
         reset();
         setLoader(false);
         setOpen(false);
-        await dispatch(dashboardProductsAction());
+        await dispatch(dashboardProductsAction(queryString, hasAdminAccess));
     } catch (error) {
         toast.error(error?.response?.data?.description || "Product update failed");
         setLoader(false);
@@ -1037,10 +1048,11 @@ export const updateProductFromDashboard =
 
 
 export const addNewProductFromDashboard = 
-    (sendData, toast, reset, setLoader, setOpen, isAdmin) => async(dispatch, getState) => {
+    (sendData, toast, reset, setLoader, setOpen, isAdmin, queryString = "") => async(dispatch, getState) => {
         try {
             setLoader(true);
-            const endpoint = isAdmin ? "/admin/categories/" : "/seller/categories/";
+            const hasAdminAccess = resolveDashboardProductAccess(getState, isAdmin);
+            const endpoint = hasAdminAccess ? "/admin/categories/" : "/seller/categories/";
             const requestConfig = getAuthRequestConfig(getState);
             
             await api.post(`${endpoint}${sendData.categoryId}/product`,
@@ -1050,7 +1062,7 @@ export const addNewProductFromDashboard =
             toast.success("Product created successfully");
             reset();
             setOpen(false);
-            await dispatch(dashboardProductsAction());
+            await dispatch(dashboardProductsAction(queryString, hasAdminAccess));
         } catch (error) {
             console.error(error);
             toast.error(error?.response?.data?.description || "Product creation failed");
@@ -1060,17 +1072,18 @@ export const addNewProductFromDashboard =
     }
 
 export const deleteProduct = 
-    (setLoader, productId, toast, setOpenDeleteModal, isAdmin) => async (dispatch, getState) => {
+    (setLoader, productId, toast, setOpenDeleteModal, isAdmin, queryString = "") => async (dispatch, getState) => {
     try {
         setLoader(true)
-        const endpoint = isAdmin ? "/admin/products/" : "/seller/products/";
+        const hasAdminAccess = resolveDashboardProductAccess(getState, isAdmin);
+        const endpoint = hasAdminAccess ? "/admin/products/" : "/seller/products/";
         const requestConfig = getAuthRequestConfig(getState);
         
         await api.delete(`${endpoint}${productId}`, requestConfig);
         toast.success("Product deleted successfully");
         setLoader(false);
         setOpenDeleteModal(false);
-        await dispatch(dashboardProductsAction());
+        await dispatch(dashboardProductsAction(queryString, hasAdminAccess));
     } catch (error) {
         console.log(error);
         toast.error(
@@ -1081,18 +1094,21 @@ export const deleteProduct =
 
 
 export const updateProductImageFromDashboard = 
-    (formData, productId, toast, setLoader, setOpen, isAdmin) => async (dispatch) => {
+    (formData, productId, toast, setLoader, setOpen, isAdmin, queryString = "") => async (dispatch, getState) => {
     try {
         setLoader(true);
-        const endpoint = isAdmin ? "/admin/products/" : "/seller/products/";
-        await api.put(`${endpoint}${productId}/image`, formData);
+        const hasAdminAccess = resolveDashboardProductAccess(getState, isAdmin);
+        const endpoint = hasAdminAccess ? "/admin/products/" : "/seller/products/";
+        const requestConfig = getAuthRequestConfig(getState);
+
+        await api.put(`${endpoint}${productId}/image`, formData, requestConfig);
         toast.success("Image upload successful");
         setLoader(false);
         setOpen(false);
-        await dispatch(dashboardProductsAction());
+        await dispatch(dashboardProductsAction(queryString, hasAdminAccess));
     } catch (error) {
         toast.error(error?.response?.data?.description || "Product Image upload failed");
-     
+        setLoader(false);
     }
 };
 

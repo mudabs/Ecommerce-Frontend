@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProductImageFromDashboard } from '../../../store/actions';
 
-const ImageUploadForm = ({ setOpen, product }) => {
+const ImageUploadForm = ({ setOpen, product, queryString = "" }) => {
     const [loader, setLoader] = useState(false);
     const fileInputRef = useRef();
     const [previewImage, setPreviewImage] = useState(null);
@@ -43,7 +43,7 @@ const ImageUploadForm = ({ setOpen, product }) => {
         const formData = new FormData();
         formData.append("image", selectedFile);
 
-        dispatch(updateProductImageFromDashboard(formData, product.id, toast, setLoader, setOpen, isAdmin));
+        dispatch(updateProductImageFromDashboard(formData, product.id, toast, setLoader, setOpen, isAdmin, queryString));
     };
 
     const handleClearImage = () => {

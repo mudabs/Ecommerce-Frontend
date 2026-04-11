@@ -75,7 +75,7 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, [dispatch, user?.email, user?.username, user?.userName]);
+  }, [dispatch, user]);
 
   return (
     <React.Fragment>

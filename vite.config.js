@@ -4,23 +4,31 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "");
-  const backendTarget = env.VITE_BACK_END_URL || "http://localhost:3001";
+  const apiBaseUrl = (env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
+  if (!apiBaseUrl) {
+    throw new Error("Missing VITE_API_BASE_URL for the current Vite mode.");
+  }
 
   return {
     plugins: [react()],
-    server: {
-      proxy: {
-        "/api": {
-          target: backendTarget,
-          changeOrigin: true,
-          secure: false,
-        },
-        "/images": {
-          target: backendTarget,
-          changeOrigin: true,
-          secure: false,
-        },
-      },
-    },
+    ...(mode === 'development'
+      ? {
+          server: {
+            proxy: {
+              "/api": {
+                target: apiBaseUrl,
+                changeOrigin: true,
+                secure: false,
+              },
+              "/images": {
+                target: apiBaseUrl,
+                changeOrigin: true,
+                secure: false,
+              },
+            },
+          },
+        }
+      : {}),
   };
 })

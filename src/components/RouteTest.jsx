@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+
 // Simple test component to verify routing works
 const RouteTest = () => {
     const navigate = useNavigate();
@@ -50,9 +52,9 @@ const RouteTest = () => {
                 
                 <h4>🔗 Expected Working URLs:</h4>
                 <ul>
-                    <li><code>http://localhost:5173/profile/orders</code> - User Orders Page</li>
-                    <li><code>http://localhost:5173/profile/account</code> - Account Info Page</li>
-                    <li><code>http://localhost:5173/profile</code> - Redirects to orders</li>
+                    <li><code>{`${currentOrigin}/profile/orders`}</code> - User Orders Page</li>
+                    <li><code>{`${currentOrigin}/profile/account`}</code> - Account Info Page</li>
+                    <li><code>{`${currentOrigin}/profile`}</code> - Redirects to orders</li>
                 </ul>
             </div>
         </div>

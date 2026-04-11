@@ -1,6 +1,12 @@
 // Debug utility for authentication troubleshooting
 // Use this in browser console to diagnose auth issues
 
+const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const localApiBaseUrl = `${window.location.protocol}//${window.location.hostname}:8081`;
+const API_BASE_URL = (isLocalHost
+    ? localApiBaseUrl
+    : 'https://api.smartcart.munashemudabura.com').replace(/\/$/, '');
+
 const authDebugger = {
     // Check current auth state
     checkAuthState() {
@@ -30,9 +36,10 @@ const authDebugger = {
     // Test API connectivity
     async testAPI() {
         console.log('=== API Connectivity Test ===');
+        console.log('API base URL:', API_BASE_URL);
         
         try {
-            const response = await fetch('http://localhost:3001/api/public/categories');
+            const response = await fetch(`${API_BASE_URL}/api/public/categories`);
             console.log('Public API status:', response.status);
             if (response.ok) {
                 const data = await response.json();
@@ -49,7 +56,7 @@ const authDebugger = {
                 const parsedAuth = JSON.parse(authData);
                 const token = parsedAuth?.jwtToken || parsedAuth?.token;
                 
-                const authResponse = await fetch('http://localhost:3001/api/auth/user', {
+                const authResponse = await fetch(`${API_BASE_URL}/api/auth/user`, {
                     method: 'GET',
                     credentials: 'include',
                     headers: {

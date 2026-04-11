@@ -1,12 +1,16 @@
-const normalizedBackendUrl = (import.meta.env.VITE_BACK_END_URL || "").replace(/\/$/, "");
-const apiPrefix = (import.meta.env.VITE_BACK_END_API_PREFIX || "/api").replace(/\/$/, "");
+const rawApiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/$/, "");
+const apiPrefix = String(import.meta.env.VITE_BACK_END_API_PREFIX || "/api").trim().replace(/\/$/, "");
 const isDev = Boolean(import.meta.env.DEV);
-const resolvedBackendUrl = isDev ? "" : normalizedBackendUrl;
 
-export const BACKEND_BASE_URL = resolvedBackendUrl;
-export const BACKEND_API_BASE_URL = `${resolvedBackendUrl}${apiPrefix}`;
-export const API_AUTH_BASE_URL = (import.meta.env.VITE_API_AUTH_BASE_URL || `${BACKEND_API_BASE_URL}/auth`).replace(/\/$/, "");
-export const API_PUBLIC_BASE_URL = (import.meta.env.VITE_API_PUBLIC_BASE_URL || `${BACKEND_API_BASE_URL}/public`).replace(/\/$/, "");
+if (!rawApiBaseUrl) {
+  throw new Error("Missing VITE_API_BASE_URL. Define it in your Vite environment file before starting the app.");
+}
+
+export const API_BASE_URL = rawApiBaseUrl;
+export const BACKEND_BASE_URL = rawApiBaseUrl;
+export const BACKEND_API_BASE_URL = `${rawApiBaseUrl}${apiPrefix}`;
+export const API_AUTH_BASE_URL = `${BACKEND_API_BASE_URL}/auth`;
+export const API_PUBLIC_BASE_URL = `${BACKEND_API_BASE_URL}/public`;
 export const IMAGE_FALLBACK_URL = "/image-placeholder.svg";
 export const SKIP_BACKEND_IMAGES = String(import.meta.env.VITE_SKIP_BACKEND_IMAGES || "false").toLowerCase() === "true";
 
@@ -38,8 +42,8 @@ export const getBackendImageUrl = (imagePath = "") => {
         // If parsing fails, fall through and return the source as-is.
       }
 
-      if (normalizedBackendUrl && source.startsWith(`${normalizedBackendUrl}/`)) {
-        return source.replace(normalizedBackendUrl, "");
+      if (rawApiBaseUrl && source.startsWith(`${rawApiBaseUrl}/`)) {
+        return source.replace(rawApiBaseUrl, "");
       }
     }
 

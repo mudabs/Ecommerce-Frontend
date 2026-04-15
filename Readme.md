@@ -1,100 +1,103 @@
-# Ecommerce Frontend
+# Smartcart Ecommerce Frontend
 
-## Project Overview
-This repository contains the frontend application for an ecommerce platform built with React and Vite. It includes:
+![Smartcart Preview](./public/interfaces/smartcart.png)
 
-- Public storefront pages (home, products, about, contact)
-- Authentication (login and registration)
-- Cart and checkout flow
-- Stripe payment confirmation flow
-- Role-aware admin/seller dashboard areas
+This repository contains the frontend application for Smartcart, a full-stack e-commerce platform built with React and Vite. The storefront includes product browsing with search and filtering, a complete cart and multi-step checkout flow with Stripe payment integration, and an AI-powered shopping assistant driven by LangChain4j on the backend. The application also provides role-based admin and seller dashboards for managing products, orders, categories, and sellers.
 
-The app communicates with a backend API and supports running locally with Vite or as a containerized static app via Nginx.
+Live Demo: [smartcart.munashemudabura.com](https://smartcart.munashemudabura.com/)
 
-## Technology Stack
-- React 19
-- Vite 7
-- React Router 7
-- Redux Toolkit + React Redux
-- Axios
-- Tailwind CSS v4
-- Material UI
-- Headless UI
-- Stripe React SDK
+---
 
-## Key Application Areas
-### Storefront
-- Home page
-- Product listing and product detail modal interactions
-- About and contact pages
+## Features
 
-### User Flow
-- Login and registration
-- Cart management
-- Checkout and payment confirmation
+- Responsive storefront with product browsing, search, and category filtering
+- AI-powered shopping assistant providing personalized product recommendations
+- Shopping cart with quantity management and real-time price calculations
+- Multi-step checkout flow with address management, payment method selection, and order review
+- Stripe payment gateway integration with invoice generation
+- User authentication with login and registration
+- Role-based access control for admin and seller dashboards
+- Product, order, category, and seller management interfaces
 
-### Admin/Seller Flow
-- Dashboard metrics
-- Product management
-- Order management
-- Category management (admin)
-- Seller management (admin)
+---
 
-## Access Control
-Routing guards are implemented through `src/components/PrivateRoute.jsx`:
+## Technologies Used
 
-- Unauthenticated users are redirected to `/login` for protected routes.
-- Authenticated users cannot access public auth pages (`/login`, `/register`).
-- Admin-only routes are mounted under `/admin`.
-- Seller users are allowed only a subset of admin paths:
-	- `/admin/orders`
-	- `/admin/products`
+- [React 19](https://react.dev/) with [Vite 7](https://vitejs.dev/)
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [Redux Toolkit](https://redux-toolkit.js.org/) for state management
+- [React Router 7](https://reactrouter.com/) for client-side routing
+- [Material UI](https://mui.com/) and [Headless UI](https://headlessui.com/)
+- [Stripe React SDK](https://stripe.com/docs/stripe-js/react) for payment processing
+- [Axios](https://axios-http.com/) for API communication
+- Docker and Nginx for containerized deployment
 
-## Routes
-Defined in `src/App.jsx`.
+---
 
-Public routes:
-- `/`
-- `/products`
-- `/about`
-- `/contact`
-- `/cart`
-- `/login`
-- `/register`
+## Screenshots
 
-Authenticated routes:
-- `/checkout`
-- `/order-confirm`
+### Home Page
 
-Admin/Seller routes:
-- `/admin`
-- `/admin/products`
-- `/admin/orders`
-- `/admin/categories`
-- `/admin/sellers`
+![Home Page](./public/interfaces/smartcart.png)
 
-## State Management
-Redux store is configured in `src/store/reducers/store.js`.
+### AI Shopping Assistant
 
-Primary slices:
-- `products`
-- `errors`
-- `carts`
-- `auth`
-- `payment`
-- `admin`
-- `order`
-- `seller`
+![AI Shopping Assistant](./public/interfaces/Screenshot%202026-04-14%20044646.png)
 
-The app preloads user, cart, and selected checkout address from local storage.
+![AI Assistant Close-up](./public/interfaces/Screenshot%202026-04-14%20044703.png)
 
-## API and Environment Configuration
-API client:
-- `src/api/api.js`
-- Uses Axios with `withCredentials: true`
-- Base URL is resolved from environment utilities in `src/utils/env.js`
+### Product Search
 
-Environment variables (create a local `.env` file):
+![Product Search](./public/interfaces/Screenshot%202026-04-14%20043821.png)
+
+### Shopping Cart
+
+![Shopping Cart](./public/interfaces/Screenshot%202026-04-14%20043835.png)
+
+### Checkout - Address Selection
+
+![Checkout Address](./public/interfaces/Screenshot%202026-04-14%20043925.png)
+
+### Checkout - Payment Method
+
+![Checkout Payment Method](./public/interfaces/Screenshot%202026-04-14%20043932.png)
+
+### Checkout - Order Summary
+
+![Checkout Order Summary](./public/interfaces/Screenshot%202026-04-14%20043937.png)
+
+### Stripe Payment Gateway
+
+![Stripe Payment](./public/interfaces/Screenshot%202026-04-14%20043958.png)
+
+### Order Confirmation
+
+![Order Confirmation](./public/interfaces/Screenshot%202026-04-14%20044011.png)
+
+---
+
+## Installation and Setup
+
+To run the project locally:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/mudabs/Ecommerce-Frontend.git
+
+# 2. Navigate to the project directory
+cd Ecommerce-Frontend
+
+# 3. Install dependencies
+npm install
+
+# 4. Create a .env file with the required environment variables
+# 5. Start the development server
+npm run dev
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
 
 ```env
 VITE_BACK_END_URL=http://localhost:5000
@@ -106,108 +109,19 @@ VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 VITE_SKIP_BACKEND_IMAGES=false
 ```
 
-Notes:
-- In development, Vite proxies `/api` and `/images` to `VITE_BACK_END_URL`.
-- In production builds, backend URL resolution is handled by `src/utils/env.js`.
-- `.env` is intentionally git-ignored and should not be committed.
-
-## Getting Started
-### Prerequisites
-- Node.js 20+ (Node 22 recommended)
-- npm
-- Running backend API compatible with the frontend contract
-
-### Install Dependencies
-```bash
-npm install
-```
-
-### Run Development Server
-```bash
-npm run dev
-```
-
-Default Vite URL:
-- `http://localhost:5173`
-
-### Build for Production
-```bash
-npm run build
-```
-
-### Preview Production Build Locally
-```bash
-npm run preview
-```
-
-### Lint
-```bash
-npm run lint
-```
-
 ## Docker
-This repository includes a multi-stage Docker build and a Compose file.
 
-### Build and Run with Docker Compose
+To build and run the application in a container:
+
 ```bash
 docker compose up --build
 ```
 
+Then open `http://localhost:8080`.
+
 Container details:
+
 - Service name: `frontend`
 - Container name: `ecommerce-frontend`
 - Exposed host port: `8080`
 - Served by Nginx on container port `80`
-
-Access URL:
-- `http://localhost:8080`
-
-## Project Structure
-High-level structure:
-
-```text
-src/
-	api/
-	components/
-		admin/
-		auth/
-		cart/
-		checkout/
-		home/
-		products/
-		shared/
-	hooks/
-	store/
-		actions/
-		reducers/
-	utils/
-public/
-Dockerfile
-compose.yaml
-vite.config.js
-```
-
-## Common Troubleshooting
-### Login Request Errors (403/401/500)
-- Confirm backend is running and reachable at `VITE_BACK_END_URL`.
-- Verify backend auth endpoints expected by frontend:
-	- Primary: `/api/auth/signin`
-	- Fallback: `/api/auth/login` (used only when primary is not found)
-- Check backend CORS and credential settings if using cookies/sessions.
-- Validate user credentials and account status in backend.
-
-### Missing Images
-- Ensure backend serves images under `/images`.
-- Verify `VITE_SKIP_BACKEND_IMAGES=false` for normal backend image loading.
-
-### Port Conflicts
-- If `5173` is in use, stop conflicting process or run Vite with another port.
-- For Docker, ensure host port `8080` is free.
-
-## Development Notes
-- Keep `.env` local and never commit secrets.
-- Prefer feature branches for all changes.
-- Run `npm run build` before pushing to catch integration issues early.
-
-## License
-No license file is currently defined in this repository.

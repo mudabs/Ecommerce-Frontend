@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
 ecom-frontend
 SmartCart_Ecommerce_Psd

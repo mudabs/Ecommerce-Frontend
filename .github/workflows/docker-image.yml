@@ -29,4 +29,4 @@ jobs:
           --build-arg VITE_FRONTEND_URL=${VITE_FRONTEND_URL} \
           --build-arg VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY} \
           --build-arg VITE_SKIP_BACKEND_IMAGES=${VITE_SKIP_BACKEND_IMAGES} \
-          --file Dockerfile --tag my-image-name:$(date +%s)
+          --file Dockerfile --tag my-image-name:$(date +%s) .

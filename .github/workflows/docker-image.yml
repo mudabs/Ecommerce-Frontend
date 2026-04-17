@@ -15,4 +15,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: |
+        docker build \
+          --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
+          --build-arg VITE_BACK_END_API_PREFIX=${{ secrets.VITE_BACK_END_API_PREFIX }} \
+          --build-arg VITE_FRONTEND_URL=${{ secrets.VITE_FRONTEND_URL }} \
+          --build-arg VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }} \
+          --build-arg VITE_SKIP_BACKEND_IMAGES=${{ secrets.VITE_SKIP_BACKEND_IMAGES }} \
+          --file Dockerfile --tag my-image-name:$(date +%s)

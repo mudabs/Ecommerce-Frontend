@@ -7,6 +7,11 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || vars.VITE_API_BASE_URL || 'https://api.smartcart.munashemudabura.com' }}
+  VITE_BACK_END_API_PREFIX: ${{ secrets.VITE_BACK_END_API_PREFIX || vars.VITE_BACK_END_API_PREFIX || '/api' }}
+  VITE_FRONTEND_URL: ${{ secrets.VITE_FRONTEND_URL || vars.VITE_FRONTEND_URL || 'https://smartcart.munashemudabura.com' }}
+  VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY || vars.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51SfkfKAqMmDsNoNqCeF2v3IOspzqVvjLox3yIOd8YHk58d4IRNET7W53m3ZgyNiYxp7X8zn8dfdKhdUFNZk0E5Hk00Z1L2rcMO' }}
+  VITE_SKIP_BACKEND_IMAGES: ${{ secrets.VITE_SKIP_BACKEND_IMAGES || vars.VITE_SKIP_BACKEND_IMAGES || 'false' }}
 
 jobs:
   build:
@@ -27,11 +32,11 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
-            --build-arg VITE_BACK_END_API_PREFIX=${{ secrets.VITE_BACK_END_API_PREFIX }} \
-            --build-arg VITE_FRONTEND_URL=${{ secrets.VITE_FRONTEND_URL }} \
-            --build-arg VITE_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }} \
-            --build-arg VITE_SKIP_BACKEND_IMAGES=${{ secrets.VITE_SKIP_BACKEND_IMAGES }} \
+            --build-arg VITE_API_BASE_URL=${VITE_API_BASE_URL} \
+            --build-arg VITE_BACK_END_API_PREFIX=${VITE_BACK_END_API_PREFIX} \
+            --build-arg VITE_FRONTEND_URL=${VITE_FRONTEND_URL} \
+            --build-arg VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY} \
+            --build-arg VITE_SKIP_BACKEND_IMAGES=${VITE_SKIP_BACKEND_IMAGES} \
             -t ghcr.io/mudabs/ecommerce-frontend:latest .
 
       - name: Push Docker image

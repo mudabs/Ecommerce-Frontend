@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Smartcart storefront icon">
+	<rect width="64" height="64" rx="14" fill="#0f172a"/>
+	<path d="M14 24h36l-2.6 8.2a6 6 0 0 1-5.72 4.18H22.32a6 6 0 0 1-5.72-4.18L14 24Z" fill="#f97316"/>
+	<path d="M18 18.5A4.5 4.5 0 0 1 22.5 14h19A4.5 4.5 0 0 1 46 18.5V24H18v-5.5Z" fill="#fb923c"/>
+	<path d="M20 24h4v8h-4zm10 0h4v8h-4zm10 0h4v8h-4z" fill="#fff7ed"/>
+	<path d="M20 36h24a2 2 0 0 1 2 2v10H18V38a2 2 0 0 1 2-2Z" fill="#e2e8f0"/>
+	<path d="M22 40h8v8h-8zm12 0h8v8h-8z" fill="#38bdf8"/>
+	<path d="M44 17H20l-1.2 7h26.4L44 17Z" fill="#fdba74"/>
+</svg>

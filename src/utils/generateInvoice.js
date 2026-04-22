@@ -1,19 +1,49 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const normalizeInvoiceItems = (order, cartItems) => {
+    const itemSource = Array.isArray(cartItems) && cartItems.length > 0
+        ? cartItems
+        : Array.isArray(order?.orderItems)
+            ? order.orderItems
+            : [];
+
+    return itemSource.map((item, idx) => {
+        const quantity = Number(item?.quantity || 0);
+        const unitPrice = Number(
+            item?.orderedProductPrice
+            ?? item?.specialPrice
+            ?? item?.price
+            ?? item?.product?.specialPrice
+            ?? item?.product?.price
+            ?? 0
+        );
+
+        return {
+            id: idx + 1,
+            productName: item?.productName || item?.product?.productName || `Product ${idx + 1}`,
+            quantity,
+            unitPrice,
+            lineTotal: quantity * unitPrice,
+        };
+    });
+};
+
 /**
  * Generates and downloads a PDF invoice.
  *
  * @param {object} params
- * @param {object}   params.order        - Backend order response data
- * @param {object}   params.address      - Shipping/billing address object
- * @param {Array}    params.cartItems    - Array of cart item objects
- * @param {object}   params.user         - Authenticated user object
- * @param {string}   params.sessionId    - Stripe session / payment ID
+ * @param {object} params.order
+ * @param {object} params.address
+ * @param {Array} params.cartItems
+ * @param {object} params.user
+ * @param {string} params.sessionId
  */
 export const generateInvoice = ({ order, address, cartItems, user, sessionId }) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const invoiceItems = normalizeInvoiceItems(order, cartItems);
     const now = new Date();
     const dateStr = now.toLocaleDateString("en-US", {
         year: "numeric",
@@ -21,7 +51,6 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
         day: "numeric",
     });
 
-    // ── Header ──────────────────────────────────────────────────────────────
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
     doc.text("Smartcart", 14, 20);
@@ -44,11 +73,9 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
     doc.text(`Date: ${dateStr}`, pageWidth - 14, 33, { align: "right" });
     doc.setTextColor(0);
 
-    // ── Divider ──────────────────────────────────────────────────────────────
     doc.setDrawColor(200);
     doc.line(14, 38, pageWidth - 14, 38);
 
-    // ── Bill To ──────────────────────────────────────────────────────────────
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("Bill To:", 14, 46);
@@ -57,15 +84,15 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
     doc.setFontSize(9);
 
     const customerName = user?.username || user?.userName || user?.name || "Customer";
-    const customerEmail = user?.email || "";
+    const customerEmail = user?.email || order?.email || "";
 
     const billLines = [
         customerName,
         customerEmail,
-        address?.buildingName || "",
-        address?.street || "",
-        `${address?.city || ""}${address?.state ? ", " + address.state : ""}`,
-        `${address?.pincode || ""}${address?.country ? "  " + address.country : ""}`,
+        address?.buildingName || order?.address?.buildingName || "",
+        address?.street || order?.address?.street || "",
+        `${address?.city || order?.address?.city || ""}${address?.state || order?.address?.state ? `, ${address?.state || order?.address?.state}` : ""}`,
+        `${address?.pincode || order?.address?.pincode || ""}${address?.country || order?.address?.country ? `  ${address?.country || order?.address?.country}` : ""}`,
     ].filter(Boolean);
 
     let billY = 52;
@@ -74,28 +101,22 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
         billY += 5;
     });
 
-    // ── Payment Info ─────────────────────────────────────────────────────────
     doc.setFont("helvetica", "bold");
     doc.text("Payment Method:", pageWidth / 2, 46);
     doc.setFont("helvetica", "normal");
-    doc.text("Stripe", pageWidth / 2, 51);
-    doc.text(`Status: Paid`, pageWidth / 2, 56);
+    doc.text(order?.payment?.pgName || order?.payment?.paymentMethod || "Stripe", pageWidth / 2, 51);
+    doc.text(`Status: ${order?.payment?.pgStatus || "Paid"}`, pageWidth / 2, 56);
 
-    // ── Items Table ──────────────────────────────────────────────────────────
     const tableStartY = Math.max(billY, 72) + 4;
-
-    const rows = cartItems.map((item, idx) => {
-        const qty = Number(item?.quantity || 0);
-        const price = Number(item?.specialPrice || item?.price || 0);
-        const total = (qty * price).toFixed(2);
-        return [
-            idx + 1,
-            item?.productName || "Product",
-            `$${price.toFixed(2)}`,
-            qty,
-            `$${total}`,
-        ];
-    });
+    const rows = invoiceItems.length > 0
+        ? invoiceItems.map((item) => ([
+            item.id,
+            item.productName,
+            `$${item.unitPrice.toFixed(2)}`,
+            item.quantity,
+            `$${item.lineTotal.toFixed(2)}`,
+        ]))
+        : [["-", "No product details available", "$0.00", 0, "$0.00"]];
 
     autoTable(doc, {
         startY: tableStartY,
@@ -112,14 +133,8 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
         margin: { left: 14, right: 14 },
     });
 
-    // ── Totals ───────────────────────────────────────────────────────────────
-    const finalY = doc.lastAutoTable.finalY + 6;
-    const subtotal = cartItems.reduce(
-        (sum, item) =>
-            sum + Number(item?.specialPrice || item?.price || 0) * Number(item?.quantity || 0),
-        0
-    );
-    // Use backend total if available (more authoritative), fall back to computed
+    const finalY = (doc.lastAutoTable?.finalY || tableStartY) + 6;
+    const subtotal = invoiceItems.reduce((sum, item) => sum + item.lineTotal, 0);
     const grandTotal = Number(order?.totalAmount ?? order?.totalPrice ?? subtotal).toFixed(2);
 
     doc.setFontSize(9);
@@ -134,8 +149,6 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
     doc.text("Total:", pageWidth - 60, finalY + 14);
     doc.text(`$${grandTotal}`, pageWidth - 14, finalY + 14, { align: "right" });
 
-    // ── Footer ───────────────────────────────────────────────────────────────
-    const pageHeight = doc.internal.pageSize.getHeight();
     doc.setFont("helvetica", "italic");
     doc.setFontSize(8);
     doc.setTextColor(150);
@@ -143,7 +156,6 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
         align: "center",
     });
 
-    // ── Download ─────────────────────────────────────────────────────────────
     const fileName = `smartcart-invoice-${orderId}.pdf`;
     doc.save(fileName);
 };

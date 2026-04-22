@@ -44,6 +44,8 @@ function App() {
     }
 
     let isMounted = true;
+    const isOrderConfirmationRoute =
+      typeof window !== 'undefined' && window.location.pathname === '/order-confirm';
 
     const hydrateCart = async () => {
       try {
@@ -60,7 +62,11 @@ function App() {
           return;
         }
 
-        if (Array.isArray(guestCartItems) && guestCartItems.length > 0) {
+        // Do not replay pre-checkout local cart items while Stripe is returning to
+        // the confirmation page, or we can accidentally recreate the just-purchased cart.
+        if (isOrderConfirmationRoute) {
+          await dispatch(getUserCart());
+        } else if (Array.isArray(guestCartItems) && guestCartItems.length > 0) {
           await dispatch(syncUserCart(guestCartItems));
         } else {
           await dispatch(getUserCart());

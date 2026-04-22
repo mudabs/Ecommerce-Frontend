@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 import Skeleton from '../shared/Skeleton';
 import { generateInvoice } from '../../utils/generateInvoice';
 
+const CHECKOUT_INVOICE_SNAPSHOT_KEY = "CHECKOUT_INVOICE_SNAPSHOT";
+
 const PaymentConfirmation = () => {
     const location = useLocation();
     const navigate = useNavigate();
@@ -28,17 +30,31 @@ const PaymentConfirmation = () => {
     const cartSnapshotRef = useRef(null);
     const addressSnapshotRef = useRef(null);
     const userSnapshotRef = useRef(null);
+    const invoiceSnapshotRef = useRef(null);
+    if (!invoiceSnapshotRef.current) {
+        try {
+            invoiceSnapshotRef.current = JSON.parse(
+                sessionStorage.getItem(CHECKOUT_INVOICE_SNAPSHOT_KEY) || "null"
+            );
+        } catch (error) {
+            invoiceSnapshotRef.current = null;
+        }
+    }
     if (!cartSnapshotRef.current) {
         const storedCart = localStorage.getItem("cartItems");
-        cartSnapshotRef.current = storedCart ? JSON.parse(storedCart) : cart;
+        cartSnapshotRef.current = invoiceSnapshotRef.current?.cartItems
+            || (storedCart ? JSON.parse(storedCart) : cart);
     }
     if (!addressSnapshotRef.current) {
         const storedAddress = localStorage.getItem("CHECKOUT_ADDRESS");
-        addressSnapshotRef.current = storedAddress ? JSON.parse(storedAddress) : null;
+        addressSnapshotRef.current = invoiceSnapshotRef.current?.address
+            || (storedAddress ? JSON.parse(storedAddress) : null);
     }
     if (!userSnapshotRef.current) {
         const storedAuth = localStorage.getItem("auth");
-        userSnapshotRef.current = user || (storedAuth ? JSON.parse(storedAuth) : null);
+        userSnapshotRef.current = invoiceSnapshotRef.current?.user
+            || user
+            || (storedAuth ? JSON.parse(storedAuth) : null);
     }
 
     const selectedUserCheckoutAddress = localStorage.getItem("CHECKOUT_ADDRESS")
@@ -147,6 +163,7 @@ const PaymentConfirmation = () => {
         if (loading || errorMessage || !hasStripeReturn) return;
 
         if (countdown <= 0) {
+            sessionStorage.removeItem(CHECKOUT_INVOICE_SNAPSHOT_KEY);
             navigate("/");
             return;
         }

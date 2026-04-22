@@ -4,10 +4,11 @@ import { useDispatch, useSelector } from 'react-redux'
 import { createStripeCheckoutSession } from '../../store/actions';
 
 const frontendBase = (import.meta.env.VITE_FRONTEND_URL || "").replace(/\/$/, "");
+const CHECKOUT_INVOICE_SNAPSHOT_KEY = "CHECKOUT_INVOICE_SNAPSHOT";
 
 const StripePayment = () => {
   const dispatch = useDispatch();
-  const { totalPrice } = useSelector((state) => state.carts);
+  const { totalPrice, cart } = useSelector((state) => state.carts);
   const { isLoading, errorMessage } = useSelector((state) => state.errors);
   const { user, selectedUserCheckoutAddress } = useSelector((state) => state.auth);
   const startedRef = useRef(false);
@@ -43,6 +44,23 @@ const StripePayment = () => {
 
     startedRef.current = true;
 
+    const normalizedCartItems = (Array.isArray(cart) ? cart : []).map((item) => ({
+      productId: item?.productId,
+      productName: item?.productName,
+      quantity: Number(item?.quantity || 0),
+      specialPrice: Number(item?.specialPrice ?? item?.price ?? 0),
+      price: Number(item?.price ?? item?.specialPrice ?? 0),
+      image: item?.image || "",
+    }));
+
+    sessionStorage.setItem(CHECKOUT_INVOICE_SNAPSHOT_KEY, JSON.stringify({
+      cartItems: normalizedCartItems,
+      address: effectiveSelectedAddress || null,
+      user: effectiveUser || null,
+      totalPrice: Number(totalPrice || 0),
+      savedAt: new Date().toISOString(),
+    }));
+
     const sendData = {
       amount: Number(totalPrice) * 100,
       currency: "usd",
@@ -54,7 +72,7 @@ const StripePayment = () => {
       metadata: {},
     };
     dispatch(createStripeCheckoutSession(sendData));
-  }, [dispatch, emailForStripe, effectiveSelectedAddress?.addressId, totalPrice, effectiveUser?.username, errorMessage]);
+  }, [cart, dispatch, emailForStripe, effectiveSelectedAddress, errorMessage, totalPrice, effectiveUser]);
 
   if (isLoading) {
     return (

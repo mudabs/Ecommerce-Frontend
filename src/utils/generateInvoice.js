@@ -71,17 +71,18 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
     const orderId = order?.orderId ?? order?.id ?? sessionId ?? "N/A";
     doc.text(`Invoice #: ${orderId}`, pageWidth - 14, 27, { align: "right" });
     doc.text(`Date: ${dateStr}`, pageWidth - 14, 33, { align: "right" });
+    doc.text("Payment: Stripe  |  Status: Paid", pageWidth - 14, 39, { align: "right" });
     doc.setTextColor(0);
 
     doc.setDrawColor(200);
-    doc.line(14, 38, pageWidth - 14, 38);
+    doc.line(14, 44, pageWidth - 14, 44);
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("Bill To:", 14, 46);
+    doc.text("Bill To:", 14, 52);
+    doc.text("Ship To:", pageWidth / 2, 52);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
 
     const customerName = user?.username || user?.userName || user?.name || "Customer";
     const customerEmail = user?.email || order?.email || "";
@@ -95,7 +96,7 @@ export const generateInvoice = ({ order, address, cartItems, user, sessionId }) 
         `${address?.pincode || order?.address?.pincode || ""}${address?.country || order?.address?.country ? `  ${address?.country || order?.address?.country}` : ""}`,
     ].filter(Boolean);
 
-    let billY = 52;
+    let billY = 57;
     billLines.forEach((line) => {
         doc.text(line, 14, billY);
         billY += 5;

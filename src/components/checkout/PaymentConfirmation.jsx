@@ -79,10 +79,17 @@ const PaymentConfirmation = () => {
         (paymentIntent && clientSecret && redirectStatus);
 
     const handleDownloadInvoice = (order) => {
+        const resolvedOrder = order || orderData;
+        const invoiceItems = (resolvedOrder?.orderItems || []).map((item) => ({
+            productName: item?.product?.productName || item?.productName,
+            quantity: item?.quantity,
+            specialPrice: item?.orderedProductPrice,
+            price: item?.orderedProductPrice,
+        }));
         generateInvoice({
-            order: order || orderData,
+            order: resolvedOrder,
             address: addressSnapshotRef.current,
-            cartItems: cartSnapshotRef.current || [],
+            cartItems: invoiceItems.length > 0 ? invoiceItems : (cartSnapshotRef.current || []),
             user: userSnapshotRef.current,
             sessionId: checkoutSessionId || paymentIntent,
         });
@@ -102,11 +109,18 @@ const PaymentConfirmation = () => {
 
         const onSuccess = (data) => {
             setOrderData(data);
+            // Use order items from the backend response (cart may be empty after Stripe redirect)
+            const invoiceItems = (data?.orderItems || []).map((item) => ({
+                productName: item?.product?.productName || item?.productName,
+                quantity: item?.quantity,
+                specialPrice: item?.orderedProductPrice,
+                price: item?.orderedProductPrice,
+            }));
             // Auto-download invoice
             generateInvoice({
                 order: data,
                 address: addressSnapshotRef.current,
-                cartItems: cartSnapshotRef.current || [],
+                cartItems: invoiceItems.length > 0 ? invoiceItems : (cartSnapshotRef.current || []),
                 user: userSnapshotRef.current,
                 sessionId: checkoutSessionId || paymentIntent,
             });

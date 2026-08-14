@@ -90,17 +90,17 @@ cd Ecommerce-Frontend
 # 3. Install dependencies
 npm install
 
-# 4. Create a .env file with the required environment variables
+# 4. Create a .env.development file with the required environment variables
 # 5. Start the development server
 npm run dev
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+For local development, create a `.env.development` file in the project root (or copy the existing template):
 
 ```env
-VITE_BACK_END_URL=http://localhost:5000
+VITE_API_BASE_URL=http://localhost:5000
 VITE_BACK_END_API_PREFIX=/api
 VITE_API_AUTH_BASE_URL=http://localhost:5000/api/auth
 VITE_API_PUBLIC_BASE_URL=http://localhost:5000/api/public
@@ -108,6 +108,10 @@ VITE_FRONTEND_URL=http://localhost:5173
 VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 VITE_SKIP_BACKEND_IMAGES=false
 ```
+
+`vite.config.js` requires `VITE_API_BASE_URL` for both development and production modes. Define it in `.env.development` and `.env.production` as appropriate; `VITE_BACK_END_URL` alone is not sufficient. For machine-specific or local-only values, use `.env.development.local`, which is ignored by Git and must not be committed.
+
+Every variable prefixed with `VITE_` is exposed to client-side code and must be treated as public. Never put server-only secrets, private API keys, or database credentials in these files; keep those values in the backend environment instead. The Stripe publishable key is safe to expose by design, but secret Stripe keys are not.
 
 ## Docker
 

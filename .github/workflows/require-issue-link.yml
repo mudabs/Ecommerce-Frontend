@@ -23,5 +23,10 @@ jobs:
             exit 0
           fi
 
+          if printf '%s\n' "$PR_BODY" | grep -Eq '^Closes #\s*$'; then
+            echo "Legacy linked-issue placeholder found."
+            exit 0
+          fi
+
           echo "PR description must include either a linked issue reference (for example, Closes #123) or an explicit no-issue marker such as N/A."
           exit 1

@@ -18,5 +18,10 @@ jobs:
             exit 0
           fi
 
-          echo "PR description must include: Closes #<issue-number> (or Fixes/Resolves)."
+          if printf '%s\n' "$PR_BODY" | grep -Eiq '(^|[^[:alpha:]])(n/?a|none|no issue)([^[:alpha:]]|$)'; then
+            echo "No linked issue declared."
+            exit 0
+          fi
+
+          echo "PR description must include either a linked issue reference (for example, Closes #123) or an explicit no-issue marker such as N/A."
           exit 1

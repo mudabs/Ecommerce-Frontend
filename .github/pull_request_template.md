@@ -2,7 +2,7 @@
 Describe what this PR changes.
 
 ## Linked Issue
-Closes #
+N/A (replace with `Closes #<issue-number>` when this PR resolves a tracked issue)
 
 ## Type of Change
 - [ ] Bug fix

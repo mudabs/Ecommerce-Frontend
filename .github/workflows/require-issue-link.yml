@@ -9,10 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR body for issue reference
+        env:
+          PR_BODY: ${{ github.event.pull_request.body || '' }}
         shell: bash
         run: |
-          BODY="${{ github.event.pull_request.body }}"
-          if echo "$BODY" | grep -Eiq '(closes|fixes|resolves)\s+#[0-9]+'; then
+          if printf '%s\n' "$PR_BODY" | grep -Eiq '(closes|fixes|resolves)\s+#[0-9]+'; then
             echo "Issue reference found."
             exit 0
           fi
